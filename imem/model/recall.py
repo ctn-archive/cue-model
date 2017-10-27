@@ -112,11 +112,30 @@ class NeuralAccumulatorDecisionProcess(spa.Network):
                 function=lambda x: x > 0)
             with nengo.presets.ThresholdingEnsembles(0.1):
                 self.inhib_thr = nengo.networks.EnsembleArray(50, n_items)
+            # nengo.Connection(
+                # self.inhibit.output, self.inhib_thr.input,
+                # transform=self.vocab.vectors)
+            self.out_inhib_gate = GatedMemory(self.vocab)
+            nengo.Connection(self.inhibit.output, self.out_inhib_gate.input)
             nengo.Connection(
-                self.inhibit.output, self.inhib_thr.input,
+                self.out_inhib_gate.output, self.inhib_thr.input,
                 transform=self.vocab.vectors)
             nengo.Connection(
                 self.inhib_thr.output, self.state.input[:-1], transform=-6.)
+            # for inp_thr in self.inp_thrs:
+                # nengo.Connection(
+                    # self.inhib_thr.output, inp_thr.input, transform=-6.)
+            self.out_inhib_gate_update = nengo.Ensemble(20, 1)
+            nengo.Connection(self.bias, self.out_inhib_gate_update)
+            nengo.Connection(
+                self.out_inhib_gate_update, self.out_inhib_gate.input_store)
+            self.input_update_inhibit = nengo.Node(size_in=1)
+            nengo.Connection(
+                self.input_update_inhibit, self.out_inhib_gate_update.neurons,
+                transform=-3. * np.ones(
+                    (self.out_inhib_gate_update.n_neurons, 1)), synapse=None)
+
+            # nengo.Connection(self.input_update_inhibit, self.buf.input_store)
 
             # Start over if recall fails
             self.failed_recall_int = nengo.Ensemble(50, 1)

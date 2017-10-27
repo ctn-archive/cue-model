@@ -276,6 +276,9 @@ class IMem(spa.Network):
                     recall_net.output, self.last_item.input, transform=0.1,
                     synapse=0.1)
 
+                nengo.Connection(
+                    self.sim_th.output, recall_net.input_update_inhibit)
+
                 inhibit_net(self.ctrl.output_pres_phase, recall_net.state)
                 inhibit_net(
                     self.ctrl.output_pres_phase, recall_net.buf.mem,
