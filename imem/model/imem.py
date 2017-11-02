@@ -63,7 +63,7 @@ class Control(nengo.Network):
                            self._current_stim is None or
                            self._current_stim.startswith('D')),
                 label='output_no_learn')
-            self.output_no_pos_count = nengo.Node(
+            self.output_no_pos__count = nengo.Node(
                 lambda t: (
                     (self.protocol.is_recall_phase(t) and
                      not self.protocol.proto.serial) or
@@ -99,10 +99,10 @@ class Vocabularies(FrozenObject):
         'items', optional=False, readonly=True)
     contexts = VocabularyOrDimParam(
         'contexts', optional=False, readonly=True)
-    positions = VocabularyOrDimParam(
-        'positions', optional=False, readonly=True)
+    pos_itions = VocabularyOrDimParam(
+        'pos_itions', optional=False, readonly=True)
 
-    def __init__(self, stim_provider, items, contexts, n_pos, rng=None):
+    def __init__(self, stim_provider, items, contexts, n_pos_, rng=None):
         super(Vocabularies, self).__init__()
 
         vocabs = Config.default(spa.Network, 'vocabs')
@@ -114,7 +114,7 @@ class Vocabularies(FrozenObject):
         if is_integer(contexts):
             contexts = spa.Vocabulary(contexts)
         self.contexts = contexts
-        self.positions = spa.Vocabulary(self.items.dimensions)
+        self.pos_itions = spa.Vocabulary(self.items.dimensions)
 
         self.items.populate(';'.join(stim_provider.get_all_items()))
         if stim_provider.n_distractors_per_epoch > 0:
@@ -123,8 +123,8 @@ class Vocabularies(FrozenObject):
         for i in range(self.items.dimensions):
             self.contexts.populate('CTX' + str(i))
 
-        for i in range(n_pos + 3):
-            self.positions.populate('P' + str(i))
+        for i in range(n_pos_ + 3):
+            self.pos_itions.populate('P' + str(i))
 
 
 class IMem(spa.Network):
@@ -146,12 +146,12 @@ class IMem(spa.Network):
             self.tcm = TCM(self.task_vocabs, beta)
             nengo.Connection(self.ctrl.output_stimulus, self.tcm.input)
 
-            # position counter
-            self.pos = OneHotCounter(len(self.task_vocabs.positions))
+            # pos_ition counter
+            self.pos_ = OneHotCounter(len(self.task_vocabs.pos_itions))
             nengo.Connection(
-                self.ctrl.output_no_pos_count, self.pos.rising_edge_gate,
+                self.ctrl.output_no_pos__count, self.pos_.rising_edge_gate,
                 transform=-1.)
-            nengo.Connection(nengo.Node(lambda t: t < 0.3), self.pos.input[0])
+            nengo.Connection(nengo.Node(lambda t: t < 0.3), self.pos_.input[0])
 
             # Short term memory
             self.ose = OSE(self.task_vocabs.items, gamma)
@@ -178,36 +178,36 @@ class IMem(spa.Network):
                 transform=-3. * np.ones(
                     (self.serial_recall_phase.n_neurons, 1)))
 
-            # Use irrelevant position vector to bind distractors
-            self.in_pos_gate = spa.State(self.task_vocabs.positions)
-            nengo.Connection(self.pos.output, self.in_pos_gate.input,
-                             transform=self.task_vocabs.positions.vectors.T)
-            nengo.Connection(self.in_pos_gate.output, self.ose.input_pos)
-            nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
+            # Use irrelevant pos_ition vector to bind distractors
+            self.in_pos__gate = spa.State(self.task_vocabs.pos_itions)
+            nengo.Connection(self.pos_.output, self.in_pos__gate.input,
+                             transform=self.task_vocabs.pos_itions.vectors.T)
+            nengo.Connection(self.in_pos__gate.output, self.ose.input_pos_)
+            nengo.Connection(self.in_pos__gate.output, self.tcm.input_pos_)
 
-            self.irrelevant_pos_gate = spa.State(self.task_vocabs.positions)
-            self.irrelevant_pos = nengo.Node(
-                self.task_vocabs.positions.create_pointer().v)
-            nengo.Connection(self.irrelevant_pos,
-                             self.irrelevant_pos_gate.input)
+            self.irrelevant_pos__gate = spa.State(self.task_vocabs.pos_itions)
+            self.irrelevant_pos_ = nengo.Node(
+                self.task_vocabs.pos_itions.create_pointer().v)
+            nengo.Connection(self.irrelevant_pos_,
+                             self.irrelevant_pos__gate.input)
             nengo.Connection(
-                self.irrelevant_pos_gate.output, self.ose.input_pos)
+                self.irrelevant_pos__gate.output, self.ose.input_pos_)
 
             with nengo.presets.ThresholdingEnsembles(0.):
-                self.in_pos_gate_inhibit = nengo.Ensemble(25, 1)
-            inhibit_net(self.in_pos_gate_inhibit, self.in_pos_gate)
+                self.in_pos__gate_inhibit = nengo.Ensemble(25, 1)
+            inhibit_net(self.in_pos__gate_inhibit, self.in_pos__gate)
             nengo.Connection(
-                self.ctrl.output_no_learn, self.in_pos_gate_inhibit)
+                self.ctrl.output_no_learn, self.in_pos__gate_inhibit)
             nengo.Connection(
-                self.ctrl.output_recall_phase, self.in_pos_gate_inhibit,
+                self.ctrl.output_recall_phase, self.in_pos__gate_inhibit,
                 transform=-1)
-            inhibit_net(self.ctrl.output_learn, self.irrelevant_pos_gate)
+            inhibit_net(self.ctrl.output_learn, self.irrelevant_pos__gate)
             inhibit_net(
-                self.ctrl.output_recall_phase, self.irrelevant_pos_gate)
+                self.ctrl.output_recall_phase, self.irrelevant_pos__gate)
             nengo.Connection(
-                self.irrelevant_pos_gate.output, self.tcm.input_pos)
+                self.irrelevant_pos__gate.output, self.tcm.input_pos_)
 
-            # Reset of position
+            # Reset of pos_ition
             # Happens only in serial recall and a certain fraction of free
             # recalls.
             with nengo.presets.ThresholdingEnsembles(0.):
@@ -218,15 +218,15 @@ class IMem(spa.Network):
             nengo.Connection(
                 self.ctrl.output_recall_phase, self.start_of_recall,
                 synapse=0.005)
-            tr = -9 * np.ones((self.pos.input.size_in, 1))
+            tr = -9 * np.ones((self.pos_.input.size_in, 1))
             tr[0, 0] = 3.
             nengo.Connection(
-                self.start_of_recall, self.pos.input, transform=tr,
+                self.start_of_recall, self.pos_.input, transform=tr,
                 synapse=0.1)
             nengo.Connection(
-                self.start_of_recall, self.tcm.input_pos,
+                self.start_of_recall, self.tcm.input_pos_,
                 transform=np.atleast_2d(
-                    self.task_vocabs.positions.vectors[0]).T,
+                    self.task_vocabs.pos_itions.vectors[0]).T,
                 synapse=0.1)
 
             # Certain fraction of recalls use ordinal strategy
@@ -247,25 +247,25 @@ class IMem(spa.Network):
             with nengo.Config(nengo.Ensemble) as cfg:
                 cfg[nengo.Ensemble].eval_points = nengo.dists.Uniform(0, 1)
                 cfg[nengo.Ensemble].intercepts = nengo.dists.Uniform(0, 1)
-                self.sim_th_pos = nengo.Ensemble(50, 1)
+                self.sim_th_pos_ = nengo.Ensemble(50, 1)
                 self.sim_th_neg = nengo.Ensemble(50, 1)
-            nengo.Connection(self.sim_th.output, self.sim_th_pos)
+            nengo.Connection(self.sim_th.output, self.sim_th_pos_)
             nengo.Connection(self.sim_th.output, self.sim_th_neg)
-            nengo.Connection(self.ctrl.output_pres_phase, self.sim_th_pos.neurons, transform=-3. * np.ones((self.sim_th_pos.n_neurons, 1)))
+            nengo.Connection(self.ctrl.output_pres_phase, self.sim_th_pos_.neurons, transform=-3. * np.ones((self.sim_th_pos_.n_neurons, 1)))
             nengo.Connection(self.ctrl.output_recall_phase, self.sim_th_neg.neurons, transform=-3. * np.ones((self.sim_th_neg.n_neurons, 1)))
-            nengo.Connection(self.sim_th_pos, self.pos.input_inc)
-            nengo.Connection(self.sim_th_neg, self.pos.input_inc, transform=-1)
+            nengo.Connection(self.sim_th_pos_, self.pos_.input_inc)
+            nengo.Connection(self.sim_th_neg, self.pos_.input_inc, transform=-1)
 
             nengo.Connection(self.ctrl.output_pres_phase, self.tcm.input_update_context)
             nengo.Connection(
                 self.sim_th_neg, self.tcm.input_update_context,
                 transform=-1.)  # FIXME ?
             nengo.Connection(
-                self.sim_th_pos, self.tcm.input_update_context,
+                self.sim_th_pos_, self.tcm.input_update_context,
                 transform=1.)  # FIXME ?
 
             # nengo.Connection(
-                # self.sim_th.output, self.pos.input_inc, transform=-1)
+                # self.sim_th.output, self.pos_.input_inc, transform=-1)
             nengo.Connection(self.sim_th.output, self.ose.input_store)
 
             nengo.Connection(self.bias, self.tcm.input_no_learn)
@@ -282,11 +282,11 @@ class IMem(spa.Network):
             self.recalled_gate = spa.State(self.task_vocabs.items)
             nengo.Connection(self.recalled_gate.output, self.tcm.input)
 
-            self.pos_recall = NeuralAccumulatorDecisionProcess(
-                self.task_vocabs.positions, noise=recall_noise)
-            self.pos_recalled_gate = spa.State(self.task_vocabs.items)
+            self.pos__recall = NeuralAccumulatorDecisionProcess(
+                self.task_vocabs.pos_itions, noise=recall_noise)
+            self.pos__recalled_gate = spa.State(self.task_vocabs.items)
             nengo.Connection(
-                self.pos_recalled_gate.output, self.tcm.input_pos)
+                self.pos__recalled_gate.output, self.tcm.input_pos_)
 
             self.tcm_recall_gate = spa.State(self.task_vocabs.items)
             nengo.Connection(
@@ -295,7 +295,7 @@ class IMem(spa.Network):
 
             for recall_net, recalled_gate in (
                     (self.recall, self.recalled_gate),
-                    (self.pos_recall, self.pos_recalled_gate)):
+                    (self.pos__recall, self.pos__recalled_gate)):
                 nengo.Connection(
                     self.tcm_recall_gate.output, recall_net.input_list[0])
                 inhibit_net(
@@ -316,36 +316,36 @@ class IMem(spa.Network):
             nengo.Connection(
                 self.sim_th.output, self.recall.out_inhibit_gate.input_store, transform=-1)
 
-            # on failed recall increment pos and update context
+            # on failed recall increment pos_ and update context
             nengo.Connection(
-                self.recall.failed_recall_heaviside, self.pos.input_inc,
+                self.recall.failed_recall_heaviside, self.pos_.input_inc,
                 transform=50., synapse=0.1)
             nengo.Connection(
                 self.recall.failed_recall_heaviside,
                 self.tcm.input_update_context, transform=20.)
 
-            # Set position from recalled positions
-            self.pos_gate = nengo.networks.EnsembleArray(
-                30, len(self.task_vocabs.positions))
+            # Set pos_ition from recalled pos_itions
+            self.pos__gate = nengo.networks.EnsembleArray(
+                30, len(self.task_vocabs.pos_itions))
             nengo.Connection(
-                self.pos_recall.buf.output, self.pos_gate.input,
-                transform=1.3 * self.task_vocabs.positions.vectors)
+                self.pos__recall.buf.output, self.pos__gate.input,
+                transform=1.3 * self.task_vocabs.pos_itions.vectors)
             nengo.Connection(
-                self.bias, self.pos_gate.input,
-                transform=-np.ones((self.pos_gate.input.size_in, 1)))
+                self.bias, self.pos__gate.input,
+                transform=-np.ones((self.pos__gate.input.size_in, 1)))
             nengo.Connection(
-                self.pos_gate.output, self.pos.input, transform=10.,
+                self.pos__gate.output, self.pos_.input, transform=10.,
                 synapse=0.1)
             self.invert = nengo.Ensemble(30, 1)
             nengo.Connection(self.bias, self.invert)
             nengo.Connection(
-                self.pos_recall.buf.mem.state_ensembles.add_output(
+                self.pos__recall.buf.mem.state_ensembles.add_output(
                     'square', lambda x: x * x),
                 self.invert,
-                transform=-np.ones((1, self.task_vocabs.positions.dimensions)))
-            inhibit_net(self.invert, self.pos_gate)
-            inhibit_net(self.ctrl.output_serial_recall, self.pos_gate)
-            inhibit_net(self.ctrl.output_serial_recall, self.pos_recall.buf)
+                transform=-np.ones((1, self.task_vocabs.pos_itions.dimensions)))
+            inhibit_net(self.invert, self.pos__gate)
+            inhibit_net(self.ctrl.output_serial_recall, self.pos__gate)
+            inhibit_net(self.ctrl.output_serial_recall, self.pos__recall.buf)
 
             # Short term recall
             self.ose_recall_gate = spa.State(self.task_vocabs.items)
@@ -363,8 +363,8 @@ class IMem(spa.Network):
                         synapse=0.1, strength=5)
 
             self.output = self.recall.output
-            self.output_pos = self.pos.output
+            self.output_pos_ = self.pos_.output
 
         self.outputs = dict(
             default=(self.output, self.task_vocabs.items),
-            output_pos=(self.output_pos, self.task_vocabs.positions))
+            output_pos_=(self.output_pos_, self.task_vocabs.pos_itions))

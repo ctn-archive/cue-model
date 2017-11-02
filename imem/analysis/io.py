@@ -32,10 +32,10 @@ class HowaKaha99FrameReader(object):
         next_line_or_stop(self._fd)
         responses = np.empty(self.n_items)
         responses.fill(np.nan)
-        for i, pos in enumerate(next_line_or_stop(self._fd).split()):
-            pos = int(pos)
-            if pos > 0:
-                responses[i] = pos
+        for i, pos_ in enumerate(next_line_or_stop(self._fd).split()):
+            pos_ = int(pos_)
+            if pos_ > 0:
+                responses[i] = pos_
         for i in range(3):
             line = next_line_or_stop(self._fd)
             while i < 2 and line.strip() == '':
@@ -45,9 +45,9 @@ class HowaKaha99FrameReader(object):
         df = pd.DataFrame({
             'trial': self.trial,
             'subject': subject,
-            'pos': np.arange(self.n_items),
-            'recalled_pos': responses - 1
-        }).set_index(['subject', 'trial', 'pos'])
+            'pos_': np.arange(self.n_items),
+            'recalled_pos_': responses - 1
+        }).set_index(['subject', 'trial', 'pos_'])
         self.trial += 1
         return df
 
@@ -65,9 +65,9 @@ def read_HowaKaha99(filename):
 
 
 def read_Jahnke68(filename):
-    data = pd.read_csv(filename, header=0, names=['pos', 'correct'])
-    data['pos'] = data['pos'].round().astype(int)
-    data = data.set_index('pos')
+    data = pd.read_csv(filename, header=0, names=['pos_', 'correct'])
+    data['pos_'] = data['pos_'].round().astype(int)
+    data = data.set_index('pos_')
     return data
 
 

@@ -18,12 +18,12 @@ class OSE(spa.Network):
 
         with self:
             self.input_item = nengo.Node(size_in=self.vocab.dimensions)
-            self.input_pos = nengo.Node(size_in=self.vocab.dimensions)
+            self.input_pos_ = nengo.Node(size_in=self.vocab.dimensions)
             self.input_store = nengo.Node(size_in=1)
 
             self.bind = spa.Bind(self.vocab)
             nengo.Connection(self.input_item, self.bind.input_a)
-            nengo.Connection(self.input_pos, self.bind.input_b)
+            nengo.Connection(self.input_pos_, self.bind.input_b)
 
             with nengo.Config(spa.State) as cfg:
                 cfg[spa.State].neurons_per_dimension = 150
@@ -44,12 +44,12 @@ class OSE(spa.Network):
             nengo.Connection(self.bias, self.mem.input_store)
 
             self.recall = spa.Bind(self.vocab, invert_a=True)
-            nengo.Connection(self.input_pos, self.recall.input_a)
+            nengo.Connection(self.input_pos_, self.recall.input_a)
             nengo.Connection(self.mem.output, self.recall.input_b)
             self.output = self.recall.output
 
         self.inputs = dict(
             input_item=(self.input_item, self.vocab),
-            input_pos=(self.input_pos, self.vocab),
+            input_pos_=(self.input_pos_, self.vocab),
             input_store=(self.input_store, None))
         self.outputs = dict(default=(self.output, self.vocab))

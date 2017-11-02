@@ -36,14 +36,14 @@ class IMemTrial(pytry.NengoTrial):
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
                 p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence)
             self.p_recalls = nengo.Probe(model.imem.output, synapse=0.01)
-            self.p_pos = nengo.Probe(model.imem.output_pos, synapse=0.01)
+            self.p_pos_ = nengo.Probe(model.imem.output_pos_, synapse=0.01)
 
             self.debug_probes = {
                 'recall_state': model.imem.recall.state.output,
                 'recall_threshold': model.imem.recall.threshold.heaviside,
                 'recall_buf': model.imem.recall.buf.output,
-                'pos_recall_state': model.imem.pos_recall.state.output,
-                'pos_recall_buf': model.imem.pos_recall.buf.output,
+                'pos__recall_state': model.imem.pos__recall.state.output,
+                'pos__recall_buf': model.imem.pos__recall.buf.output,
                 'aml_comp': model.imem.tcm.net_m_tf.compare.output,
                 'ctx': model.imem.tcm.current_ctx.output,
                 'ctx_update': model.imem.tcm.current_ctx.input_update_context,
@@ -51,7 +51,7 @@ class IMemTrial(pytry.NengoTrial):
                 'out_inhibit_gate': model.imem.recall.out_inhibit_gate.output,
                 'recall_ctx': model.imem.tcm.net_m_ft.output,
                 'recall_ctx_cue': model.imem.tcm.net_m_ft.input_cue,
-                'input_pos': model.imem.tcm.input_pos,
+                'input_pos_': model.imem.tcm.input_pos_,
                 'current_ctx': model.imem.tcm.current_ctx.output,
                 'input_update_ctx': model.imem.tcm.input_update_context,
                 'sim_th': model.imem.sim_th.output,
@@ -63,21 +63,21 @@ class IMemTrial(pytry.NengoTrial):
                 'failed_recall_heaviside':
                     model.imem.recall.failed_recall_heaviside,
                 'start_of_recall': model.imem.start_of_recall,
-                'pos_state': model.imem.pos.state.output,
-                'pos_state_in': model.imem.pos.state.input,
-                'pos_inhibit_threshold': model.imem.pos.inhibit_threshold.output,
-                'pos_advance_threshold': model.imem.pos.advance_threshold.output,
-                'input_inc': model.imem.pos.input_inc,
-                'no_pos_count': model.imem.ctrl.output_no_pos_count,
+                'pos__state': model.imem.pos_.state.output,
+                'pos__state_in': model.imem.pos_.state.input,
+                'pos__inhibit_threshold': model.imem.pos_.inhibit_threshold.output,
+                'pos__advance_threshold': model.imem.pos_.advance_threshold.output,
+                'input_inc': model.imem.pos_.input_inc,
+                'no_pos__count': model.imem.ctrl.output_no_pos__count,
                 'ose_recall_gate': model.imem.ose_recall_gate.output,
                 'tcm_recall_gate': model.imem.tcm_recall_gate.output,
-                'pos_gate': model.imem.pos_gate.output,
+                'pos__gate': model.imem.pos__gate.output,
                 'ose': model.imem.ose.mem.output,
                 'buf_input_store': model.imem.recall.buf_input_store,
                 # 'out_inhib_gate_update': model.imem.recall.out_inhib_gate_update,
                 # 'input_update_inhibit': model.imem.recall.input_update_inhibit,
                 'sim_th_neg': model.imem.sim_th_neg,
-                'sim_th_pos': model.imem.sim_th_pos,
+                'sim_th_pos_': model.imem.sim_th_pos_,
             }
             if p.debug:
                 for k in self.debug_probes:
@@ -92,17 +92,17 @@ class IMemTrial(pytry.NengoTrial):
         recall_vocab = self.vocabs.items.create_subset(self.stim_provider.get_all_items())
         similarity = spa.similarity(sim.data[self.p_recalls], recall_vocab)
         responses = []
-        positions = np.arange(self.proto.n_items)
+        pos_itions = np.arange(self.proto.n_items)
         if self.proto.serial:
-            for i in positions:
+            for i in pos_itions:
                 recall_phase = sim.trange() > self.proto.pres_phase_duration
-                s = recall_phase & (sim.data[self.p_pos][:, i] > 0.8)
+                s = recall_phase & (sim.data[self.p_pos_][:, i] > 0.8)
                 if np.any(s):
-                    recall_for_pos = similarity[s][-1, :]
+                    recall_for_pos_ = similarity[s][-1, :]
                 else:
-                    recall_for_pos = np.array([0.])
-                if np.any(recall_for_pos > 0.6):
-                    recalled = float(np.argmax(recall_for_pos))
+                    recall_for_pos_ = np.array([0.])
+                if np.any(recall_for_pos_ > 0.6):
+                    recalled = float(np.argmax(recall_for_pos_))
                     if len(responses) == 0 or recalled != responses[-1]:
                         responses.append(recalled)
                     else:
@@ -118,13 +118,13 @@ class IMemTrial(pytry.NengoTrial):
 
         result = {
             'responses': responses,
-            'pos': sim.data[self.p_pos],
+            'pos_': sim.data[self.p_pos_],
             'recalls': sim.data[self.p_recalls],
-            'positions': positions,
+            'pos_itions': pos_itions,
             'vocab_vectors': self.vocabs.items.vectors,
             'vocab_keys': list(self.vocabs.items.keys()),
-            'pos_vectors': self.vocabs.positions.vectors,
-            'pos_keys': list(self.vocabs.positions.keys()),
+            'pos__vectors': self.vocabs.pos_itions.vectors,
+            'pos__keys': list(self.vocabs.pos_itions.keys()),
         }
         if p.debug:
             result.update(

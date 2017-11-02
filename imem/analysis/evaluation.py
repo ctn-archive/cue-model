@@ -36,12 +36,12 @@ def psyrun_to_psyrun_df(data):
 def psyrun_df_to_melted(data):
     return pd.melt(
         pd.DataFrame(data), id_vars=['seed', 'trial'],
-        var_name='pos', value_name='recalled_pos').set_index(['trial', 'pos'])
+        var_name='pos_', value_name='recalled_pos_').set_index(['trial', 'pos_'])
 
 
 @register_conversion('melted', 'success_count')
 def melted_to_success_count(data):
-    data = data['recalled_pos']
+    data = data['recalled_pos_']
     return np.squeeze((data >= 0.).groupby(level='trial').sum().values)
 
 
@@ -71,7 +71,7 @@ def evaluate_serial_recall(proto, exp_data, model_data, fig=None):
     if fig is None:
         fig = plt.gcf()
 
-    evaluate_serial_pos_curve(
+    evaluate_serial_pos__curve(
         proto, exp_data, model_data, ax=fig.add_subplot(1, 1, 1))
 
 
@@ -85,7 +85,7 @@ def evaluate_free_recall(proto, exp_data, model_data, fig=None):
         proto, exp_data, model_data, ax=fig.add_subplot(2, 2, 2))
     evaluate_crp(
         proto, exp_data, model_data, ax=fig.add_subplot(2, 2, 3))
-    evaluate_serial_pos_curve(
+    evaluate_serial_pos__curve(
         proto, exp_data, model_data, strict=False, ax=fig.add_subplot(2, 2, 4))
 
 
@@ -117,7 +117,7 @@ def evaluate_p_first_recall(proto, exp_data, model_data, ax=None):
     analysis.p_first_recall(model_data).plot(
         marker='o', label="model", ax=ax)
 
-    ax.set_xlabel("Serial position")
+    ax.set_xlabel("Serial pos_ition")
     ax.set_ylabel("Probability of first recall")
     ax.legend()
 
@@ -131,22 +131,22 @@ def evaluate_crp(proto, exp_data, model_data, ax=None, limit=6):
     analysis.crp(model_data, limit=limit).plot(
         marker='o', label="model", ax=ax)
 
-    ax.set_xlabel("Lag position")
+    ax.set_xlabel("Lag pos_ition")
     ax.set_ylabel("CRP")
     ax.legend()
 
 
-def evaluate_serial_pos_curve(
+def evaluate_serial_pos__curve(
         proto, exp_data, model_data, strict=True, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    analysis.serial_pos_curve(exp_data, strict=strict).plot(
+    analysis.serial_pos__curve(exp_data, strict=strict).plot(
         marker='o', label="experimental", ax=ax)
-    analysis.serial_pos_curve(model_data, strict=strict).plot(
+    analysis.serial_pos__curve(model_data, strict=strict).plot(
         marker='o', label="model", ax=ax)
 
-    ax.set_xlabel("Serial position")
+    ax.set_xlabel("Serial pos_ition")
     ax.set_ylabel("Proportion correct recalls")
     ax.set_ylim(0, 1)
     ax.legend()
