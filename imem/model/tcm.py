@@ -56,6 +56,11 @@ class TCM(spa.Network):
             self.net_m_ft = AssocMatLearning(
                 self.task_vocabs.items, self.task_vocabs.contexts,
                 init_transform=self.task_vocabs.contexts.vectors)
+            self.input_scale = nengo.Node(size_in=1)
+            nengo.Connection(
+                self.input_scale, self.net_m_tf.input_scale, synapse=None)
+            nengo.Connection(
+                self.input_scale, self.net_m_ft.input_scale, synapse=None)
 
             # Stimulus input
             self.input = nengo.Node(size_in=self.task_vocabs.items.dimensions)
@@ -98,7 +103,8 @@ class TCM(spa.Network):
             default=(self.input, self.task_vocabs.items),
             input_pos=(self.input_pos, self.task_vocabs.positions),
             input_update_context=(self.input_update_context, None),
-            input_no_learn=(self.input_no_learn, None))
+            input_no_learn=(self.input_no_learn, None),
+            input_scale=(self.input_scale, None))
         self.outputs = dict(
             output_recalled_item=(
                 self.output_recalled_item, self.task_vocabs.items))
@@ -159,7 +165,7 @@ class AssocMatLearning(spa.Network):
             self.input_cue = self.state.input
             self.input_target = self.target.input
             self.output = nengo.Node(size_in=self.output_vocab.dimensions)
-            self.scale = nengo.Node(1.)
+            self.input_scale = nengo.Node(size_in=1)
 
             for i, e in enumerate(self.state.all_ensembles):
                 sd = e.dimensions
@@ -173,7 +179,7 @@ class AssocMatLearning(spa.Network):
                 n = nengo.Node(size_in=sd + 1)
                 nengo.Connection(
                     self.target.output[start:end], n[1:])
-                nengo.Connection(self.scale, n[0])
+                nengo.Connection(self.input_scale, n[0], synapse=None)
                 nengo.Connection(n, conn.learning_rule)
 
             self.compare = SimilarityThreshold(self.output_vocab)
@@ -191,7 +197,8 @@ class AssocMatLearning(spa.Network):
         self.inputs = {
             'default': (self.input_cue, self.input_vocab),
             'target': (self.input_target, self.output_vocab),
-            'no_learn': (self.input_no_learn, None)}
+            'no_learn': (self.input_no_learn, None),
+            'scale': (self.input_scale, None)}
         self.outputs = {'default': (self.output, self.output_vocab)}
 
 

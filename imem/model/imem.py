@@ -56,6 +56,9 @@ class Control(nengo.Network):
                 protocol.proto.serial, label='output_serial_recall')
             self.output_free_recall = nengo.Node(
                 not protocol.proto.serial, label='output_serial_recall')
+            self.output_lr = nengo.Node(
+                1. if protocol.proto.lr is None else protocol.proto.lr,
+                label="output_lr")
 
             self._current_stim = None
             self.output_no_learn = nengo.Node(
@@ -145,6 +148,7 @@ class IMem(spa.Network):
             # TCM
             self.tcm = TCM(self.task_vocabs, beta)
             nengo.Connection(self.ctrl.output_stimulus, self.tcm.input)
+            nengo.Connection(self.ctrl.output_lr, self.tcm.input_scale)
 
             # position counter
             self.pos = OneHotCounter(len(self.task_vocabs.positions))
