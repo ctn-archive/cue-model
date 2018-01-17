@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.stats.proportion import proportion_confint
 
-from imem.analysis.conversion import convert, register_conversion
+from cue.analysis.conversion import convert, register_conversion
 
 
 def bootstrap_ci(data, func, n=3000, p=0.95):

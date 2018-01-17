@@ -3,7 +3,7 @@ from nengo.config import Default
 import nengo_spa as spa
 from nengo_spa.vocab import VocabularyOrDimParam
 
-from imem.model.modules import GatedMemory
+from cue.model.modules import GatedMemory
 
 
 class OSE(spa.Network):

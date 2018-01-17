@@ -9,12 +9,12 @@ from nengo_spa.vocab import (
     VocabularyMap, VocabularyMapParam, VocabularyOrDimParam)
 import numpy as np
 
-from imem.model.modules import SimilarityThreshold
-from imem.model.networks import OneHotCounter
-from imem.model.ose import OSE
-from imem.model.recall import NeuralAccumulatorDecisionProcess
-from imem.model.tcm import TCM
-from imem.utils.nengo import inhibit_net
+from cue.model.modules import SimilarityThreshold
+from cue.model.networks import OneHotCounter
+from cue.model.ose import OSE
+from cue.model.recall import NeuralAccumulatorDecisionProcess
+from cue.model.tcm import TCM
+from cue.utils.nengo import inhibit_net
 
 
 class Control(nengo.Network):
@@ -127,12 +127,12 @@ class Vocabularies(FrozenObject):
             self.positions.populate('P' + str(i))
 
 
-class IMem(spa.Network):
+class CUE(spa.Network):
     def __init__(
             self, protocol, task_vocabs, beta, gamma=0.9775, ose_thr=0.2,
             ordinal_prob=0.2, recall_noise=0., min_evidence=0.025, **kwargs):
-        kwargs.setdefault('label', 'IMem')
-        super(IMem, self).__init__(**kwargs)
+        kwargs.setdefault('label', 'CUE')
+        super(CUE, self).__init__(**kwargs)
 
         self.task_vocabs = task_vocabs
 

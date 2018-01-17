@@ -4,8 +4,8 @@ import nengo_spa as spa
 from nengo_spa.vocab import VocabularyOrDimParam
 import numpy as np
 
-from imem.model.modules import GatedMemory
-from imem.utils.nengo import inhibit_net
+from cue.model.modules import GatedMemory
+from cue.utils.nengo import inhibit_net
 
 
 class NeuralAccumulatorDecisionProcess(spa.Network):

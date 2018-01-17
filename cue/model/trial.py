@@ -5,11 +5,11 @@ import nengo_spa as spa
 import numpy as np
 import pytry
 
-from imem.model import IMem, Vocabularies
-from imem.protocols import PROTOCOLS, StimulusProvider
+from cue.model import CUE, Vocabularies
+from cue.protocols import PROTOCOLS, StimulusProvider
 
 
-class IMemTrial(pytry.NengoTrial):
+class CueTrial(pytry.NengoTrial):
     # pylint: disable=attribute-defined-outside-init,arguments-differ
 
     def params(self):
@@ -33,53 +33,53 @@ class IMemTrial(pytry.NengoTrial):
             np.random.RandomState(p.seed + 1))
 
         with spa.Network(seed=p.seed) as model:
-            model.imem = IMem(
+            model.cue = CUE(
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
                 p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence)
-            self.p_recalls = nengo.Probe(model.imem.output, synapse=0.01)
-            self.p_pos = nengo.Probe(model.imem.output_pos, synapse=0.01)
+            self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
+            self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
 
             self.debug_probes = {
-                'recall_state': model.imem.recall.state.output,
-                'recall_threshold': model.imem.recall.threshold.heaviside,
-                'recall_buf': model.imem.recall.buf.output,
-                'pos_recall_state': model.imem.pos_recall.state.output,
-                'pos_recall_buf': model.imem.pos_recall.buf.output,
-                'aml_comp': model.imem.tcm.net_m_tf.compare.output,
-                'ctx': model.imem.tcm.current_ctx.output,
-                'ctx_update': model.imem.tcm.current_ctx.input_update_context,
-                'inhib_recall': model.imem.recall.inhibit.output,
-                'out_inhibit_gate': model.imem.recall.out_inhibit_gate.output,
-                'recall_ctx': model.imem.tcm.net_m_ft.output,
-                'recall_ctx_cue': model.imem.tcm.net_m_ft.input_cue,
-                'input_pos': model.imem.tcm.input_pos,
-                'current_ctx': model.imem.tcm.current_ctx.output,
-                'input_update_ctx': model.imem.tcm.input_update_context,
-                'sim_th': model.imem.sim_th.output,
-                'last_item': model.imem.last_item.output,
-                'ose_output': model.imem.ose.output,
-                'tcm_output': model.imem.tcm.net_m_tf.output,
-                'failed_recall_int': model.imem.recall.failed_recall_int,
-                'failed_recall': model.imem.recall.failed_recall,
+                'recall_state': model.cue.recall.state.output,
+                'recall_threshold': model.cue.recall.threshold.heaviside,
+                'recall_buf': model.cue.recall.buf.output,
+                'pos_recall_state': model.cue.pos_recall.state.output,
+                'pos_recall_buf': model.cue.pos_recall.buf.output,
+                'aml_comp': model.cue.tcm.net_m_tf.compare.output,
+                'ctx': model.cue.tcm.current_ctx.output,
+                'ctx_update': model.cue.tcm.current_ctx.input_update_context,
+                'inhib_recall': model.cue.recall.inhibit.output,
+                'out_inhibit_gate': model.cue.recall.out_inhibit_gate.output,
+                'recall_ctx': model.cue.tcm.net_m_ft.output,
+                'recall_ctx_cue': model.cue.tcm.net_m_ft.input_cue,
+                'input_pos': model.cue.tcm.input_pos,
+                'current_ctx': model.cue.tcm.current_ctx.output,
+                'input_update_ctx': model.cue.tcm.input_update_context,
+                'sim_th': model.cue.sim_th.output,
+                'last_item': model.cue.last_item.output,
+                'ose_output': model.cue.ose.output,
+                'tcm_output': model.cue.tcm.net_m_tf.output,
+                'failed_recall_int': model.cue.recall.failed_recall_int,
+                'failed_recall': model.cue.recall.failed_recall,
                 'failed_recall_heaviside':
-                    model.imem.recall.failed_recall_heaviside,
-                'start_of_serial_recall': model.imem.start_of_serial_recall,
-                'start_of_free_recall': model.imem.start_of_free_recall,
-                'pos_state': model.imem.pos.state.output,
-                'pos_state_in': model.imem.pos.state.input,
-                'pos_inhibit_threshold': model.imem.pos.inhibit_threshold.output,
-                'pos_advance_threshold': model.imem.pos.advance_threshold.output,
-                'input_inc': model.imem.pos.input_inc,
-                'no_pos_count': model.imem.ctrl.output_no_pos_count,
-                'ose_recall_gate': model.imem.ose_recall_gate.output,
-                'tcm_recall_gate': model.imem.tcm_recall_gate.output,
-                'pos_gate': model.imem.pos_gate.output,
-                'ose': model.imem.ose.mem.output,
-                'buf_input_store': model.imem.recall.buf_input_store,
-                # 'out_inhib_gate_update': model.imem.recall.out_inhib_gate_update,
-                # 'input_update_inhibit': model.imem.recall.input_update_inhibit,
-                'sim_th_neg': model.imem.sim_th_neg,
-                'sim_th_pos': model.imem.sim_th_pos,
+                    model.cue.recall.failed_recall_heaviside,
+                'start_of_serial_recall': model.cue.start_of_serial_recall,
+                'start_of_free_recall': model.cue.start_of_free_recall,
+                'pos_state': model.cue.pos.state.output,
+                'pos_state_in': model.cue.pos.state.input,
+                'pos_inhibit_threshold': model.cue.pos.inhibit_threshold.output,
+                'pos_advance_threshold': model.cue.pos.advance_threshold.output,
+                'input_inc': model.cue.pos.input_inc,
+                'no_pos_count': model.cue.ctrl.output_no_pos_count,
+                'ose_recall_gate': model.cue.ose_recall_gate.output,
+                'tcm_recall_gate': model.cue.tcm_recall_gate.output,
+                'pos_gate': model.cue.pos_gate.output,
+                'ose': model.cue.ose.mem.output,
+                'buf_input_store': model.cue.recall.buf_input_store,
+                # 'out_inhib_gate_update': model.cue.recall.out_inhib_gate_update,
+                # 'input_update_inhibit': model.cue.recall.input_update_inhibit,
+                'sim_th_neg': model.cue.sim_th_neg,
+                'sim_th_pos': model.cue.sim_th_pos,
             }
             if p.debug:
                 for k in self.debug_probes:

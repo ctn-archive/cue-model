@@ -5,7 +5,7 @@ from nengo.config import Default
 import nengo_spa as spa
 from nengo_spa.vocab import VocabularyOrDimParam
 
-from imem.utils.nengo import inhibit_net
+from cue.utils.nengo import inhibit_net
 
 
 class GatedMemory(spa.Network):

@@ -10,10 +10,10 @@ from psyrun.store import AutodetectStore
 from scipy.stats import kurtosis
 import seaborn as sns
 
-from imem.analysis import analysis
-from imem.analysis.conversion import convert, DataRep
-from imem.analysis.io import read_exp_data
-from imem.protocols import PROTOCOLS
+from cue.analysis import analysis
+from cue.analysis.conversion import convert, DataRep
+from cue.analysis.io import read_exp_data
+from cue.protocols import PROTOCOLS
 
 
 store = AutodetectStore()

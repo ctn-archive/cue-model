@@ -7,9 +7,9 @@ import nengo_spa as spa
 from nengo_spa.vocab import VocabularyOrDimParam
 import numpy as np
 
-from imem.model.amlearn import AML
-from imem.model.modules import GatedMemory, SimilarityThreshold
-from imem.utils.nengo import inhibit_net
+from cue.model.amlearn import AML
+from cue.model.modules import GatedMemory, SimilarityThreshold
+from cue.utils.nengo import inhibit_net
 
 
 class TCM(spa.Network):

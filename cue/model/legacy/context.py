@@ -4,8 +4,8 @@ import nengo
 import nengo_spa as spa
 import numpy as np
 
-from imem.model.modules import GatedMemory
-from imem.utils.nengo import inhibit_net
+from cue.model.modules import GatedMemory
+from cue.utils.nengo import inhibit_net
 
 
 def BoundedIntegrator(d, beta, **kwargs):

@@ -2,8 +2,8 @@ import argparse
 
 from nengo_extras.gexf import CollapsingGexfConverter
 
-from imem.model.imem import IMem, Vocabularies
-from imem import protocols
+from cue.model.imem import CUE, Vocabularies
+from cue import protocols
 
 
 if __name__ == '__main__':
@@ -15,6 +15,6 @@ if __name__ == '__main__':
     proto = protocols.PROTOCOLS['serial']
     stim_provider = protocols.StimulusProvider(proto, distractor_rate=1.)
     vocabs = Vocabularies(stim_provider, 64, 64, proto.n_items)
-    model = IMem(stim_provider, vocabs, 0.62676, 0.9775, 0.)
+    model = CUE(stim_provider, vocabs, 0.62676, 0.9775, 0.)
 
     CollapsingGexfConverter().convert(model).write(args.filename[0])

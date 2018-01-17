@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.stats.proportion import proportion_confint
 
-from imem.analysis.conversion import DataRep
+from cue.analysis.conversion import DataRep
 
 
 def next_line_or_stop(f):

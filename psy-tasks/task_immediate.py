@@ -5,7 +5,7 @@ import numpy as np
 from psyrun import Param
 from psyrun.scheduler import Slurm, Sqsub
 
-from imem.model.trial import IMemTrial
+from cue.model.trial import CueTrial
 
 
 rng = np.random.RandomState(846777)
@@ -46,5 +46,5 @@ if platform.node().startswith('gra') or platform.node().startswith('cedar'):
 
 def execute(trial, **kwargs):
     kwargs['protocol'] = 'immediate'
-    result = IMemTrial().run(**kwargs)
+    result = CueTrial().run(**kwargs)
     return result
