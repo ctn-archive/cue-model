@@ -5,7 +5,7 @@ import numpy as np
 from psyrun import Param
 from psyrun.scheduler import Slurm
 
-from cue.model.trial import CueTrial
+from cue.trials import CueTrial
 
 
 rng = np.random.RandomState(846777)
