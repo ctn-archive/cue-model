@@ -3,7 +3,7 @@ import platform
 import numpy as np
 
 from psyrun import Param
-from psyrun.scheduler import Slurm, Sqsub
+from psyrun.scheduler import Slurm
 
 from cue.model.trial import CueTrial
 
@@ -19,7 +19,7 @@ pool_size = 1
 max_jobs = 100
 
 if platform.node().startswith('gra') or platform.node().startswith('cedar'):
-    workdir = '/scratch/jgosmann/tcm'
+    workdir = '/scratch/jgosmann/cue'
     scheduler = Slurm(workdir)
     def timelimit(name):
         if 'split' in name or 'merge' in name:
