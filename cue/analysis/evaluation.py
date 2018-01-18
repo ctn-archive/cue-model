@@ -1,3 +1,4 @@
+import logging
 from glob import glob
 import os.path
 import traceback
@@ -16,7 +17,27 @@ from cue.analysis.io import read_exp_data
 from cue.protocols import PROTOCOLS
 
 
+logger = logging.getLogger(__name__)
 store = AutodetectStore()
+
+
+def interval_overlap(m1, l1, u1, m2, l2, u2):
+    return (m1 - l1 <= m2 + u2) & (m2 - l2 <= m1 + u1)
+
+
+def interval_overlap_df(main_var, df1, df2):
+    df1 = df1.fillna(0.)
+    df2 = df2.fillna(0.)
+    return interval_overlap(
+        df1[main_var], df1['ci_low'], df1['ci_upp'],
+        df2[main_var], df2['ci_low'], df2['ci_upp'])
+
+
+def interval_overlap_aggregate(exp_data, model_data, fn):
+    m1, (l1, u1) = analysis.aggregate_measure(exp_data, fn)
+    m2, (l2, u2) = analysis.aggregate_measure(model_data, fn)
+    x = interval_overlap(m1, m1 - l1, u1 - m1, m2, m2 - l2, u2 - m2)
+    return x
 
 
 def evaluate(path):
@@ -30,6 +51,8 @@ def evaluate(path):
                     exp_data = read_exp_data(proto.exp_data)
                 model_data = DataRep(
                     'psyrun', store.load(locate_results_file(proto_path)))
+
+                logger.info(proto_name)
 
                 if proto.serial:
                     fig = plt.figure(figsize=(12, 4))
@@ -97,6 +120,7 @@ def evaluate_successful_recall_dist(proto, exp_data, model_data, ax=None):
     plot_dist_stats(ev_model_data.data, ax)
     if exp_data is not None:
         ev_exp_data = convert(exp_data, 'success_count')
+        evaluate_dist_overlap(ev_exp_data.data, ev_model_data.data)
         plot_dist_stats(ev_exp_data.data, ax)
 
 
@@ -113,6 +137,11 @@ def evaluate_p_first_recall(proto, exp_data, model_data, ax=None):
         ev_exp_data['p_first'].plot(
             marker='s', label="experimental", ax=ax,
             yerr=ev_exp_data[['ci_low', 'ci_upp']].values.T)
+
+    logger.info(
+        'p_first_recall: %i/%i', int(np.sum(interval_overlap_df(
+            'p_first', ev_model_data, ev_exp_data))),
+        proto.n_items)
 
     ax.set_xlabel("Serial position")
     ax.set_ylabel("P(first recall)")
@@ -142,6 +171,13 @@ def evaluate_crp(proto, exp_data, model_data, ax=None, limit=6):
                 marker='s', label="experimental", ax=ax,
                 yerr=np.copy(ev_exp_data[['ci_low', 'ci_upp']].values.T))
 
+    assert np.all(ev_exp_data.index == ev_model_data.index)
+    sel = (np.abs(ev_model_data.index) <= limit) & (ev_model_data.index != 0)
+    logger.info(
+        'crp: %i/%i', int(np.sum(interval_overlap_df(
+            'crp', ev_model_data[sel], ev_exp_data[sel]))),
+        len(ev_model_data['crp'][sel]))
+
     ax.set_xlim(-limit, limit)
     ax.set_ylim(bottom=0.)
     ax.set_xlabel("Lag position")
@@ -163,6 +199,11 @@ def evaluate_serial_pos_curve(
         ev_exp_data['correct'].plot(
             marker='s', label="experimental", ax=ax,
             yerr=ev_exp_data[['ci_low', 'ci_upp']].values.T)
+
+    logger.info(
+        'serial_pos_curve: %i/%i', int(np.sum(interval_overlap_df(
+            'correct', ev_model_data, ev_exp_data))),
+        proto.n_items)
 
     ax.set_xlabel("Serial position")
     ax.set_ylabel("Recall proportion")
@@ -213,6 +254,13 @@ def plot_dist_stats(data, ax=None):
         [mean_u - mean, std_u - std, kur_u - kur]], marker='o')
     # TODO remove lines
     # TODO label plot
+
+
+def evaluate_dist_overlap(exp_data, model_data):
+    x = (int(interval_overlap_aggregate(exp_data, model_data, np.mean)) +
+        int(interval_overlap_aggregate(exp_data, model_data, np.std)) +
+        int(interval_overlap_aggregate(exp_data, model_data, kurtosis)))
+    logger.info('dist_overlap: %i/3', x)
 
 
 def locate_results_file(path):
