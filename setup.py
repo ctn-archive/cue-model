@@ -18,6 +18,7 @@ setup(
         'nengo_spa==0.3',
         'numpy',
         'pandas',
+        'psyrun',
         'pytry',
         'scipy',
         'seaborn',
