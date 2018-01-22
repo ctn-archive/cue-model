@@ -223,6 +223,7 @@ def evaluate_transpositions(proto, exp_data, model_data, ax=None):
         yerr=data[['ci_low', 'ci_upp']].values.T)
     lim = np.max(np.abs(data.index.values))
     ax.set_xlim(-lim - .5, lim + .5)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax.set_xlabel("Transposition")
     ax.set_ylabel("Response proportion")
