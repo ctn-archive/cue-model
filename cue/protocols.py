@@ -127,7 +127,8 @@ class HebbRepStimulusProvider(object):
 
         self.repeated_list = self.make_list()
         self.lists = [
-            self.repeated_list if i % rep_list_freq == 0 else self.make_list()
+            self.repeated_list if (i + 1) % rep_list_freq == 0
+            else self.make_list()
             for i in range(self.n_lists)]
 
     @property

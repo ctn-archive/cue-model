@@ -26,12 +26,12 @@ class HebbRepetitionTrial(pytry.NengoTrial):
 
     def model(self, p):
         self.stim_provider = HebbRepStimulusProvider(
-            n_total_items = 19,
-            n_items_per_list = 7,
-            n_lists = 2 * 4,
-            rep_list_freq = 2,
-            pi = 1.,
-            recall_duration = 40.)
+            n_total_items=9,
+            n_items_per_list=9,
+            n_lists=24,
+            rep_list_freq=3,
+            pi=1.,
+            recall_duration=30.)
         self.vocabs = Vocabularies(
             self.stim_provider, p.item_d, p.context_d,
             self.stim_provider.n_total_items,
