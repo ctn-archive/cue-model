@@ -24,6 +24,8 @@ class CueTrial(pytry.NengoTrial):
         self.param("min. recall evidence", min_evidence=0.035)
         self.param("protocol", protocol='immed')
         self.param("recall duration", recall_duration=60.)
+        self.param("disable STM recall", disable_stm_recall=False)
+        self.param("disable LTM recall", disable_ltm_recall=False)
 
     def model(self, p):
         self.proto = PROTOCOLS[p.protocol]
@@ -35,7 +37,9 @@ class CueTrial(pytry.NengoTrial):
         with spa.Network(seed=p.seed) as model:
             model.cue = CUE(
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
-                p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence)
+                p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence,
+                disable_stm_recall=p.disable_stm_recall,
+                disable_ltm_recall=p.disable_ltm_recall)
             self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
             self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
 
