@@ -46,6 +46,6 @@ if platform.node().startswith('gra') or platform.node().startswith('cedar'):
     }
 
 def execute(trial, **kwargs):
-    kwargs['protocol'] = 'immediate'
+    kwargs['protocol'] = 'serial'
     result = CueTrial().run(**kwargs)
     return result
