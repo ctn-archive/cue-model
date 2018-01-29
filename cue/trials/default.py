@@ -126,13 +126,13 @@ class CueTrial(pytry.NengoTrial):
 
         result = {
             'responses': responses,
-            'pos': sim.data[self.p_pos],
-            'recalls': sim.data[self.p_recalls],
-            'positions': positions,
-            'vocab_vectors': self.vocabs.items.vectors,
-            'vocab_keys': list(self.vocabs.items.keys()),
-            'pos_vectors': self.vocabs.positions.vectors,
-            'pos_keys': list(self.vocabs.positions.keys()),
+            # 'pos': sim.data[self.p_pos],
+            # 'recalls': sim.data[self.p_recalls],
+            # 'positions': positions,
+            # 'vocab_vectors': self.vocabs.items.vectors,
+            # 'vocab_keys': list(self.vocabs.items.keys()),
+            # 'pos_vectors': self.vocabs.positions.vectors,
+            # 'pos_keys': list(self.vocabs.positions.keys()),
         }
         if p.debug:
             result.update(

@@ -18,7 +18,7 @@ pspace = Param(
     trial=range(n_trials),
     recall_duration=45.,
     noise=0.015,
-    min_evidence=0.04,
+    min_evidence=0.03,
     disable_ltm_recall=True)
 min_items = 1
 pool_size = 1
@@ -46,6 +46,6 @@ if platform.node().startswith('gra') or platform.node().startswith('cedar'):
     }
 
 def execute(trial, **kwargs):
-    kwargs['protocol'] = 'immediate'
+    kwargs['protocol'] = 'serial'
     result = CueTrial().run(**kwargs)
     return result
