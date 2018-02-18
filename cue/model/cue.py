@@ -160,8 +160,10 @@ class CUE(spa.Network):
             # primacy effect
             # FIXME time dependence for different protocols
             nengo.Connection(
+                # nengo.Node(
+                    # lambda t: -np.exp(-t / 1.) if t < 12. else 0.),
                 nengo.Node(
-                    lambda t: -np.exp(-t / 1.) if t < 12. else 0.),
+                    lambda t: 0.8 + (-np.exp(-(t % 39.) / 1.) if (t % 39.) < 12. else 0.) - 1.),# - (t // 39.) * 0.3),
                 self.tcm.net_m_tf.compare.threshold)
 
             self.serial_recall_phase = nengo.Ensemble(50, 1)
@@ -177,8 +179,22 @@ class CUE(spa.Network):
 
             # Use irrelevant position vector to bind distractors
             self.in_pos_gate = spa.State(self.task_vocabs.positions)
-            nengo.Connection(self.pos.output, self.in_pos_gate.input,
+
+            xvocab = spa.Vocabulary(self.task_vocabs.positions.dimensions, strict=False)
+            def conv(t, x):
+                # return x
+                i = int(t // 39.)
+                return np.roll(x, i)
+                # return (xvocab.parse('X' + str(int(t % 39.))) * spa.pointer.SemanticPointer(x)).v
+
+            epoch_cconv = nengo.Node(conv, size_in=xvocab.dimensions)
+            nengo.Connection(self.pos.output, epoch_cconv,
                              transform=self.task_vocabs.positions.vectors.T)
+            nengo.Connection(epoch_cconv, self.in_pos_gate.input)
+
+            # nengo.Connection(self.pos.output, self.in_pos_gate.input,
+                             # transform=self.task_vocabs.positions.vectors.T)
+
             nengo.Connection(self.in_pos_gate.output, self.ose.input_pos)
             nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
 
