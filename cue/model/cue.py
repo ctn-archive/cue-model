@@ -184,20 +184,8 @@ class CUE(spa.Network):
             # Use irrelevant position vector to bind distractors
             self.in_pos_gate = spa.State(self.task_vocabs.positions)
 
-            xvocab = spa.Vocabulary(self.task_vocabs.positions.dimensions, strict=False)
-            def conv(t, x):
-                # return x
-                i = int(t // 39.)
-                return np.roll(x, i)
-                # return (xvocab.parse('X' + str(int(t % 39.))) * spa.pointer.SemanticPointer(x)).v
-
-            epoch_cconv = nengo.Node(conv, size_in=xvocab.dimensions)
-            nengo.Connection(self.pos.output, epoch_cconv,
+            nengo.Connection(self.pos.output, self.in_pos_gate.input,
                              transform=self.task_vocabs.positions.vectors.T)
-            nengo.Connection(epoch_cconv, self.in_pos_gate.input)
-
-            # nengo.Connection(self.pos.output, self.in_pos_gate.input,
-                             # transform=self.task_vocabs.positions.vectors.T)
 
             nengo.Connection(self.in_pos_gate.output, self.ose.input_pos)
             nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
