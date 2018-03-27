@@ -38,17 +38,16 @@ class HebbRepetitionTrial(pytry.NengoTrial):
             np.random.RandomState(p.seed + 1))
 
         with spa.Network(seed=p.seed) as model:
-            model.imem = CUE(
+            model.cue = CUE(
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
                 p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence)
-            self.p_recalls = nengo.Probe(model.imem.output, synapse=0.01)
-            self.p_pos = nengo.Probe(model.imem.output_pos, synapse=0.01)
+            self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
+            self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
 
             self.debug_probes = {
-                'start_of_serial_recall': model.imem.start_of_serial_recall,
-                'start_of_free_recall': model.imem.start_of_free_recall,
-                'start_of_pres_phase': model.imem.start_of_pres_phase,
-                'no_learn': model.imem.ctrl.output_no_learn,
+                'start_of_serial_recall': model.cue.start_of_serial_recall,
+                'start_of_free_recall': model.cue.start_of_free_recall,
+                'start_of_pres_phase': model.cue.start_of_pres_phase,
             }
             if p.debug:
                 for k in self.debug_probes:
