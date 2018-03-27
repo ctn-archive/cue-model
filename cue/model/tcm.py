@@ -288,8 +288,8 @@ class Context(spa.Network):
             self.input = nengo.Node(size_in=self.vocab.dimensions)
 
             self.new_ctx = nengo.Node(size_in=self.vocab.dimensions)
-            self.current = GatedMemory(self.vocab)
-            self.old = GatedMemory(self.vocab)
+            self.current = GatedMemory(self.vocab, subdimensions=1)
+            self.old = GatedMemory(self.vocab, subdimensions=1)
 
             nengo.Connection(self.input, self.new_ctx, transform=beta)
             nengo.Connection(

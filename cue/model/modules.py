@@ -42,7 +42,7 @@ class GatedMemory(spa.Network):
 
     def __init__(
             self, vocab=Default, feedback=1., feedback_syn=.1, diff_scale=100.,
-            **kwargs):
+            subdimensions=16, **kwargs):
         super(GatedMemory, self).__init__(**kwargs)
 
         self.vocab = vocab
@@ -50,7 +50,8 @@ class GatedMemory(spa.Network):
         with self:
             self.diff = spa.State(self.vocab)
             self.mem = spa.State(
-                self.vocab, feedback=feedback, feedback_synapse=feedback_syn)
+                self.vocab, subdimensions=subdimensions, feedback=feedback,
+                feedback_synapse=feedback_syn)
             self.input_store = nengo.Node(size_in=1)
 
             nengo.Connection(
