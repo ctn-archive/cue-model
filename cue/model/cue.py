@@ -162,13 +162,14 @@ class CUE(spa.Network):
             nengo.Connection(self.ctrl.output_stimulus, self.ose.input_item)
 
             # primacy effect
-            # FIXME time dependence for different protocols
+            def primacy(t):
+                epoch_t = protocol.epoch_duration
+                if epoch_t < protocol.pres_phase_duration:
+                    return -np.exp(-epoch_t)
+                else:
+                    return 0.
             nengo.Connection(
-                # nengo.Node(
-                    # lambda t: -np.exp(-t / 1.) if t < 12. else 0.),
-                nengo.Node(
-                    lambda t: 0.8 + (-np.exp(-(t % 39.) / 1.) if (t % 39.) < 12. else 0.) - 1.),# - (t // 39.) * 0.3),
-                self.tcm.net_m_tf.compare.threshold)
+                nengo.Node(primacy), self.tcm.net_m_tf.compare.threshold)
 
             self.serial_recall_phase = nengo.Ensemble(50, 1)
             nengo.Connection(

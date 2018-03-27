@@ -34,6 +34,10 @@ class Recall(namedtuple(
     def duration(self):
         return self.pres_phase_duration + self.ri
 
+    @property
+    def epoch_duration(self):
+        return self.duration
+
 
 class StimulusProvider(object):
     """Recall protocoll.
