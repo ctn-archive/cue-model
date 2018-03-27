@@ -5,7 +5,8 @@ import numpy as np
 
 
 class Recall(namedtuple(
-        'Recall', ['n_items', 'pi', 'ipi', 'ri', 'serial', 'exp_data'])):
+        'Recall', [
+            'n_items', 'pi', 'ipi', 'ri', 'serial', 'lr', 'exp_data'])):
     """Recall protocol.
 
     Parameters
@@ -20,6 +21,9 @@ class Recall(namedtuple(
         Retention interval.
     serial : bool
         Indicates serial vs free recall.
+    lr : function, optional
+        Function providing the AML learning rate. Will be a constant of 1
+        if set to *None*.
     """
 
     @property
@@ -124,6 +128,7 @@ class HebbRepStimulusProvider(object):
 
         self.serial = True
         self.n_distractors_per_epoch = 0
+        self.lr = lambda t: 1.
 
         self.repeated_list = self.make_list()
         self.lists = [
@@ -187,17 +192,17 @@ def _datapath(path):
 
 PROTOCOLS = {
     'serial': Recall(
-        n_items=10, pi=1., ipi=0., ri=0., serial=True,
+        n_items=10, pi=1., ipi=0., ri=0., serial=True, lr=None,
         exp_data=_datapath('Jahnke68/10item_0sec.csv')),
     'immediate': Recall(
-        n_items=12, pi=1., ipi=0., ri=0., serial=False,
+        n_items=12, pi=1., ipi=0., ri=0., serial=False, lr=None,
         exp_data=_datapath('HowaKaha99/Immed.dat')),
     'delayed': Recall(
-        n_items=12, pi=1.2, ipi=0., ri=16., serial=False,
+        n_items=12, pi=1.2, ipi=0., ri=16., serial=False, lr=None,
         exp_data=_datapath('HowaKaha99/Ltr0.dat')),
     'contdist': Recall(
-        n_items=12, pi=1.2, ipi=16., ri=16., serial=False,
+        n_items=12, pi=1.2, ipi=16., ri=16., serial=False, lr=None,
         exp_data=_datapath('HowaKaha99/Ltr3.dat')),
     'scopolamine': Recall(
-        n_items=16, pi=2., ipi=0., ri=0., serial=False, exp_data=None),
+        n_items=16, pi=2., ipi=0., ri=0., serial=False, lr=None, exp_data=None),
 }

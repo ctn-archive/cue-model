@@ -56,6 +56,11 @@ class TCM(spa.Network):
             self.net_m_ft = AssocMatLearning(
                 self.task_vocabs.items, self.task_vocabs.contexts,
                 init_transform=self.task_vocabs.contexts.vectors)
+            self.input_scale = nengo.Node(size_in=1)
+            nengo.Connection(
+                self.input_scale, self.net_m_tf.input_scale, synapse=None)
+            nengo.Connection(
+                self.input_scale, self.net_m_ft.input_scale, synapse=None)
 
             # Stimulus input
             self.input = nengo.Node(size_in=self.task_vocabs.items.dimensions)
@@ -98,7 +103,8 @@ class TCM(spa.Network):
             default=(self.input, self.task_vocabs.items),
             input_pos=(self.input_pos, self.task_vocabs.positions),
             input_update_context=(self.input_update_context, None),
-            input_no_learn=(self.input_no_learn, None))
+            input_no_learn=(self.input_no_learn, None),
+            input_scale=(self.input_scale, None))
         self.outputs = dict(
             output_recalled_item=(
                 self.output_recalled_item, self.task_vocabs.items))
