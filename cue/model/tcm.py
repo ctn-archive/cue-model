@@ -81,10 +81,18 @@ class TCM(spa.Network):
             nengo.Connection(self.net_m_ft.output, self.current_ctx.input)
             nengo.Connection(self.current_ctx.output, self.net_m_tf.input_cue)
 
+            self.pos_item_assoc = UnconstrainedAssocMatLearning(
+                self.task_vocabs.positions, self.task_vocabs.items,
+                learning_rate=0.3)
+            nengo.Connection(self.input_pos, self.pos_item_assoc.input_cue)
+            nengo.Connection(self.input, self.pos_item_assoc.input_target)
+            nengo.Connection(self.input_scale, self.pos_item_assoc.input_scale)
+
             # Control of learning
             self.input_no_learn = nengo.Node(size_in=1)
             nengo.Connection(self.input_no_learn, self.net_m_ft.input_no_learn)
             nengo.Connection(self.input_no_learn, self.net_m_tf.input_no_learn)
+            nengo.Connection(self.input_no_learn, self.pos_item_assoc.input_no_learn)
 
             # Initialization of context
             initial_ctx = self.task_vocabs.contexts.create_pointer().v
@@ -97,7 +105,9 @@ class TCM(spa.Network):
                 self.current_ctx.old.input_store)
 
             self.input_update_context = self.current_ctx.input_update_context
-            self.output_recalled_item = self.net_m_tf.output
+            self.output_recalled_item = nengo.Node(size_in=self.task_vocabs.items.dimensions)
+            nengo.Connection(self.net_m_tf.output, self.output_recalled_item)
+            nengo.Connection(self.pos_item_assoc.output, self.output_recalled_item)
 
         self.inputs = dict(
             default=(self.input, self.task_vocabs.items),
