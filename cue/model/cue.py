@@ -73,7 +73,7 @@ class Control(nengo.Network):
                     self._current_stim is None or
                     (self._current_stim.startswith('D') and
                      not protocol.proto.serial)),
-                label='output_no_learn')
+                label='output_no_pos_count')
 
             self.bias = nengo.Node(1.)
             self.output_learn = nengo.Ensemble(
