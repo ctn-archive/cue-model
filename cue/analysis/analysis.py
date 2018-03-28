@@ -14,6 +14,16 @@ def bootstrap_ci(data, func, n=3000, p=0.95):
     return r[index], r[-index]
 
 
+def bootstrap_diff_p(data1, data2, n=3000):
+    m1 = np.mean(data1)
+    m2 = np.mean(data2)
+    centered1 = data1 - m1
+    centered2 = data2 - m2
+    r1 = np.mean(np.random.choice(centered1, (n, len(centered1))), axis=1)
+    r2 = np.mean(np.random.choice(centered2, (n, len(centered2))), axis=1)
+    return np.sum(np.abs(r1 - r2) > np.abs(m1 - m2)) / float(n)
+
+
 def aggregate_measure(data, fn):
     return fn(data), bootstrap_ci(data, fn)
 

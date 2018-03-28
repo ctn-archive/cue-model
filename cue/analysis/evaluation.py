@@ -96,17 +96,15 @@ def evaluate_free_recall(proto, exp_data, model_data, fig=None):
 
 
 def evaluate_successful_recalls(proto, exp_data, model_data, ax=None):
-    cp = iter(sns.color_palette())
-
     if ax is None:
         ax = plt.gca()
 
-    plot_successful_recalls(
-        model_data, proto.n_items, color=next(cp), label="model", ax=ax)
     if exp_data is not None:
         plot_successful_recalls(
-            exp_data, proto.n_items, color=next(cp), label="experimental",
-            ax=ax)
+            exp_data, proto.n_items, label="experimental",
+            ax=ax, color='C0')
+    plot_successful_recalls(
+        model_data, proto.n_items, label="model", ax=ax, color='C1')
 
     ax.set_xlim(-0.5, proto.n_items + 0.5)
     ax.set_xlabel("# successful recalls")
@@ -117,26 +115,26 @@ def evaluate_successful_recalls(proto, exp_data, model_data, ax=None):
 
 def evaluate_successful_recall_dist(proto, exp_data, model_data, ax=None):
     ev_model_data = convert(model_data, 'success_count')
-    plot_dist_stats(ev_model_data.data, ax)
     if exp_data is not None:
         ev_exp_data = convert(exp_data, 'success_count')
         evaluate_dist_overlap(ev_exp_data.data, ev_model_data.data)
         plot_dist_stats(ev_exp_data.data, ax)
+    plot_dist_stats(ev_model_data.data, ax)
 
 
 def evaluate_p_first_recall(proto, exp_data, model_data, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    ev_model_data = analysis.p_first_recall(model_data)
-    ev_model_data['p_first'].plot(
-        marker='o', label="model", ax=ax,
-        yerr=ev_model_data[['ci_low', 'ci_upp']].values.T)
     if exp_data is not None:
         ev_exp_data = analysis.p_first_recall(exp_data)
         ev_exp_data['p_first'].plot(
             marker='s', label="experimental", ax=ax,
             yerr=ev_exp_data[['ci_low', 'ci_upp']].values.T)
+    ev_model_data = analysis.p_first_recall(model_data)
+    ev_model_data['p_first'].plot(
+        marker='o', label="model", ax=ax,
+        yerr=ev_model_data[['ci_low', 'ci_upp']].values.T)
 
     logger.info(
         'p_first_recall: %i/%i', int(np.sum(interval_overlap_df(
@@ -160,16 +158,16 @@ def evaluate_crp(proto, exp_data, model_data, ax=None, limit=6):
         warnings.filterwarnings(
             'ignore', '.*converting a masked element to nan.*')
 
-        ev_model_data = analysis.crp(model_data)
-        ev_model_data['crp'].plot(
-            marker='o', label="model", ax=ax,
-            yerr=np.copy(ev_model_data[['ci_low', 'ci_upp']].values.T))
-
         if exp_data is not None:
             ev_exp_data = analysis.crp(exp_data)
             ev_exp_data['crp'].plot(
                 marker='s', label="experimental", ax=ax,
                 yerr=np.copy(ev_exp_data[['ci_low', 'ci_upp']].values.T))
+
+        ev_model_data = analysis.crp(model_data)
+        ev_model_data['crp'].plot(
+            marker='o', label="model", ax=ax,
+            yerr=np.copy(ev_model_data[['ci_low', 'ci_upp']].values.T))
 
     assert np.all(ev_exp_data.index == ev_model_data.index)
     sel = (np.abs(ev_model_data.index) <= limit) & (ev_model_data.index != 0)
@@ -191,19 +189,21 @@ def evaluate_serial_pos_curve(
         ax = plt.gca()
 
     ev_model_data = analysis.serial_pos_curve(model_data, strict=strict)
-    ev_model_data['correct'].plot(
-        marker='o', label="model", ax=ax,
-        yerr=ev_model_data[['ci_low', 'ci_upp']].values.T)
+
     if exp_data is not None:
         ev_exp_data = analysis.serial_pos_curve(exp_data, strict=strict)
         ev_exp_data['correct'].plot(
             marker='s', label="experimental", ax=ax,
             yerr=ev_exp_data[['ci_low', 'ci_upp']].values.T)
 
-    logger.info(
-        'serial_pos_curve: %i/%i', int(np.sum(interval_overlap_df(
-            'correct', ev_model_data, ev_exp_data))),
-        proto.n_items)
+        logger.info(
+            'serial_pos_curve: %i/%i', int(np.sum(interval_overlap_df(
+                'correct', ev_model_data, ev_exp_data))),
+            proto.n_items)
+
+    ev_model_data['correct'].plot(
+        marker='o', label="model", ax=ax,
+        yerr=ev_model_data[['ci_low', 'ci_upp']].values.T)
 
     ax.set_xlabel("Serial position")
     ax.set_ylabel("Recall proportion")
@@ -219,7 +219,7 @@ def evaluate_transpositions(proto, exp_data, model_data, ax=None):
     data = analysis.transpositions(model_data)
     ax.bar(
         data.index, data['p_transpose'],
-        width=1., color=sns.color_palette()[0],
+        width=1., color=sns.color_palette(desat=0.8)[1],
         yerr=data[['ci_low', 'ci_upp']].values.T)
     lim = np.max(np.abs(data.index.values))
     ax.set_xlim(-lim - .5, lim + .5)
@@ -242,7 +242,7 @@ def plot_successful_recalls(
     ax.axvline(x=np.mean(n_successfull.data), label=label, **kwargs)
 
 
-def plot_dist_stats(data, ax=None):
+def plot_dist_stats(data, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
@@ -252,15 +252,15 @@ def plot_dist_stats(data, ax=None):
 
     ax.errorbar(range(3), [mean, std, kur], yerr=[
         [mean - mean_l, std - std_l, kur - kur_l],
-        [mean_u - mean, std_u - std, kur_u - kur]], marker='o')
+        [mean_u - mean, std_u - std, kur_u - kur]], marker='o', **kwargs)
     # TODO remove lines
     # TODO label plot
 
 
 def evaluate_dist_overlap(exp_data, model_data):
     x = (int(interval_overlap_aggregate(exp_data, model_data, np.mean)) +
-        int(interval_overlap_aggregate(exp_data, model_data, np.std)) +
-        int(interval_overlap_aggregate(exp_data, model_data, kurtosis)))
+         int(interval_overlap_aggregate(exp_data, model_data, np.std)) +
+         int(interval_overlap_aggregate(exp_data, model_data, kurtosis)))
     logger.info('dist_overlap: %i/3', x)
 
 
