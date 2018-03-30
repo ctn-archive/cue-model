@@ -83,7 +83,7 @@ class TCM(spa.Network):
 
             self.pos_item_assoc = UnconstrainedAssocMatLearning(
                 self.task_vocabs.positions, self.task_vocabs.items,
-                learning_rate=0.3)
+                learning_rate=0.05)
             nengo.Connection(self.input_pos, self.pos_item_assoc.input_cue)
             nengo.Connection(self.input, self.pos_item_assoc.input_target)
             nengo.Connection(self.input_scale, self.pos_item_assoc.input_scale)
@@ -255,7 +255,7 @@ class AssocMatLearning(UnconstrainedAssocMatLearning):
             init_transform=None, **kwargs):
         super(AssocMatLearning, self).__init__(
             input_vocab, output_vocab, init_transform, learning_rate=10.,
-            decay=.99995, **kwargs)
+            decay=.999973176, **kwargs)
 
         with self:
             self.compare = SimilarityThreshold(self.output_vocab)

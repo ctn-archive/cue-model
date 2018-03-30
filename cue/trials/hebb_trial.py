@@ -22,7 +22,7 @@ class HebbRepetitionTrial(pytry.NengoTrial):
         self.param("OSE memory threshold", ose_thr=0.1)
         self.param("TCM prob. to recall from beginning", ordinal_prob=.1)
         self.param("noise in recall", noise=0.009)
-        self.param("min. recall evidence", min_evidence=0.035)
+        self.param("min. recall evidence", min_evidence=0.015)
 
     def model(self, p):
         self.stim_provider = HebbRepStimulusProvider(
@@ -31,7 +31,7 @@ class HebbRepetitionTrial(pytry.NengoTrial):
             n_lists=24,
             rep_list_freq=3,
             pi=1.,
-            recall_duration=30.)
+            recall_duration=60.)
         self.vocabs = Vocabularies(
             self.stim_provider, p.item_d, p.context_d,
             self.stim_provider.n_total_items,
