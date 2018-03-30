@@ -106,8 +106,10 @@ class TCM(spa.Network):
 
             self.input_update_context = self.current_ctx.input_update_context
             self.output_recalled_item = nengo.Node(size_in=self.task_vocabs.items.dimensions)
-            nengo.Connection(self.net_m_tf.output, self.output_recalled_item)
-            nengo.Connection(self.pos_item_assoc.output, self.output_recalled_item)
+            nengo.Connection(self.net_m_tf.output, self.output_recalled_item, synapse=None)
+            nengo.Connection(
+                self.pos_item_assoc.output, self.output_recalled_item,
+                synapse=None)
 
         self.inputs = dict(
             default=(self.input, self.task_vocabs.items),
@@ -196,7 +198,7 @@ class UnconstrainedAssocMatLearning(spa.Network):
                 nengo.Connection(
                     self.target.output[start:end], n[2:])
                 nengo.Connection(self.input_scale, n[0], synapse=None)
-                nengo.Connection(nengo.Node(decay), n[1])
+                nengo.Connection(nengo.Node(decay), n[1], synapse=None)
                 nengo.Connection(n, conn.learning_rule)
 
             if init_transform is not None:
