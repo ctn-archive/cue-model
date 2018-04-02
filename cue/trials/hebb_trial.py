@@ -5,12 +5,13 @@ import nengo_spa as spa
 import numpy as np
 import pytry
 
+from cue import Simulator
 from cue.analysis.neural import model_out_to_responses
 from cue.model import CUE, Vocabularies
 from cue.protocols import HebbRepStimulusProvider
 
 
-class HebbRepetitionTrial(pytry.NengoTrial):
+class HebbRepetitionTrial(pytry.PlotTrial):
     # pylint: disable=attribute-defined-outside-init,arguments-differ
 
     def params(self):
@@ -23,6 +24,8 @@ class HebbRepetitionTrial(pytry.NengoTrial):
         self.param("TCM prob. to recall from beginning", ordinal_prob=.1)
         self.param("noise in recall", noise=0.009)
         self.param("min. recall evidence", min_evidence=0.015)
+        self.param("PyOpenCL context", cl_context=None)
+        self.param("debug mode", debug=False)
 
     def model(self, p):
         self.stim_provider = HebbRepStimulusProvider(
@@ -56,8 +59,9 @@ class HebbRepetitionTrial(pytry.NengoTrial):
 
         return model
 
-    def evaluate(self, p, sim, plt):
-        sim.run(self.stim_provider.total_duration)
+    def evaluate(self, p, plt):
+        with Simulator(self.model(p), context=p.cl_context, progress_bar=False) as sim:
+            sim.run(self.stim_provider.total_duration)
 
         t = sim.trange()
 
