@@ -9,7 +9,7 @@ from nengo_spa.vocab import (
     VocabularyMap, VocabularyMapParam, VocabularyOrDimParam)
 import numpy as np
 
-from cue.model.modules import SimilarityThreshold
+from cue.model.modules import GatedMemory, SimilarityThreshold
 from cue.model.networks import OneHotCounter
 from cue.model.ose import OSE
 from cue.model.recall import NeuralAccumulatorDecisionProcess
@@ -60,7 +60,7 @@ class Control(nengo.Network):
                 1. if protocol.proto.lr is None else protocol.proto.lr,
                 label="output_lr")
 
-            self._current_stim = None
+            self._current_stim = '0'
             self.output_no_learn = nengo.Node(
                 lambda t: (self.protocol.is_recall_phase(t) or
                            self._current_stim is None or
@@ -285,6 +285,45 @@ class CUE(spa.Network):
             nengo.Connection(self.ctrl.output_stimulus, self.sim_th.input_a)
             nengo.Connection(self.last_item.output, self.sim_th.input_b)
 
+            # XXX
+            # self.xlast_item = spa.State(self.task_vocabs.items, feedback=1.)
+            # self.xsim_th = SimilarityThreshold(self.task_vocabs.items)
+            # nengo.Connection(
+                # self.ctrl.output_stimulus, self.xlast_item.input, transform=.3,
+                # synapse=0.1)
+            # nengo.Connection(self.ctrl.output_stimulus, self.xsim_th.input_a)
+            # nengo.Connection(self.xlast_item.output, self.xsim_th.input_b)
+            # self.cur_item = GatedMemory(self.task_vocabs.items)
+            # self.prev_item = GatedMemory(self.task_vocabs.items)
+            # nengo.Connection(self.ctrl.output_stimulus, self.cur_item.input)
+            # nengo.Connection(self.xsim_th.output, self.cur_item.input_store)
+            # nengo.Connection(self.cur_item.output, self.prev_item.input)
+            # nengo.Connection(self.prev_item.output, self.tcm.pos_item_assoc.input_cue)
+            # nengo.Connection(self.xsim_th.output, self.prev_item.input_store, transform=-1.)
+            # nengo.Connection(nengo.Node(1.), self.prev_item.input_store)
+            self.cc = spa.Bind(self.task_vocabs.items)
+            # nengo.Connection(self.ctrl.output_prev_stimulus, self.cc.input_a)
+            nengo.Connection(
+                self.pos.output_prev, self.cc.input_b,
+                transform=self.task_vocabs.positions.vectors.T)
+            nengo.Connection(self.cc.output, self.tcm.pos_item_assoc.input_cue)
+
+            self.stage_a = GatedMemory(self.task_vocabs.items)
+            self.stage_b = GatedMemory(self.task_vocabs.items)
+            nengo.Connection(self.ctrl.output_stimulus, self.stage_a.input)
+            nengo.Connection(self.stage_a.output, self.stage_b.input)
+            nengo.Connection(self.stage_b.output, self.cc.input_a)
+            inhibit_net(self.ctrl.output_recall_phase, self.stage_a)
+            inhibit_net(self.ctrl.output_recall_phase, self.stage_b)
+            nengo.Connection(self.sim_th.output, self.stage_b.input_store)
+            nengo.Connection(nengo.Node(1.), self.stage_a.input_store, synapse=None)
+            nengo.Connection(self.sim_th.output, self.stage_a.input_store, transform=-1.)
+
+            self.sim_th2 = SimilarityThreshold(self.task_vocabs.items)
+            nengo.Connection(self.stage_a.output, self.sim_th2.input_a)
+            nengo.Connection(self.ctrl.output_stimulus, self.sim_th2.input_b)
+            nengo.Connection(self.sim_th2.output, self.stage_a.input_store, synapse=0.1)
+
             with nengo.Config(nengo.Ensemble) as cfg:
                 cfg[nengo.Ensemble].eval_points = nengo.dists.Uniform(0, 1)
                 cfg[nengo.Ensemble].intercepts = nengo.dists.Uniform(0, 1)
@@ -354,6 +393,16 @@ class CUE(spa.Network):
                     self.ctrl.output_pres_phase, recall_net.buf.mem,
                     strength=6)
                 inhibit_net(self.ctrl.output_pres_phase, recall_net.inhibit)
+
+            # XXX
+            # cc = spa.Bind(self.task_vocabs.items)
+            # nengo.Connection(self.recalled_gate.output, cc.input_a)
+            # nengo.Connection(
+                # self.pos.output, cc.input_b,
+                # transform=np.roll(self.task_vocabs.positions.vectors.T, 1))
+            # nengo.Connection(cc.output, self.tcm.pos_item_assoc.input_cue)
+            # self.cc = cc
+            nengo.Connection(self.recall.output, self.cc.input_a)
 
             nengo.Connection(self.recall.output, self.sim_th.input_a, transform=1.2)
             nengo.Connection(
