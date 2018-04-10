@@ -9,7 +9,7 @@ from nengo_spa.vocab import (
     VocabularyMap, VocabularyMapParam, VocabularyOrDimParam)
 import numpy as np
 
-from cue.model.modules import SimilarityThreshold
+from cue.model.modules import GatedMemory, SimilarityThreshold
 from cue.model.networks import OneHotCounter
 from cue.model.ose import OSE
 from cue.model.recall import NeuralAccumulatorDecisionProcess
@@ -56,8 +56,11 @@ class Control(nengo.Network):
                 protocol.proto.serial, label='output_serial_recall')
             self.output_free_recall = nengo.Node(
                 not protocol.proto.serial, label='output_serial_recall')
+            self.output_lr = nengo.Node(
+                1. if protocol.proto.lr is None else protocol.proto.lr,
+                label="output_lr")
 
-            self._current_stim = None
+            self._current_stim = '0'
             self.output_no_learn = nengo.Node(
                 lambda t: (self.protocol.is_recall_phase(t) or
                            self._current_stim is None or
@@ -70,7 +73,7 @@ class Control(nengo.Network):
                     self._current_stim is None or
                     (self._current_stim.startswith('D') and
                      not protocol.proto.serial)),
-                label='output_no_learn')
+                label='output_no_pos_count')
 
             self.bias = nengo.Node(1.)
             self.output_learn = nengo.Ensemble(
@@ -130,9 +133,13 @@ class Vocabularies(FrozenObject):
 class CUE(spa.Network):
     def __init__(
             self, protocol, task_vocabs, beta, gamma=0.9775, ose_thr=0.2,
-            ordinal_prob=0.2, recall_noise=0., min_evidence=0.025, **kwargs):
+            ordinal_prob=0.2, recall_noise=0., min_evidence=0.025,
+            extensions=None, **kwargs):
         kwargs.setdefault('label', 'CUE')
         super(CUE, self).__init__(**kwargs)
+
+        if extensions is None:
+            extensions = set()
 
         self.task_vocabs = task_vocabs
 
@@ -143,8 +150,9 @@ class CUE(spa.Network):
             self.ctrl = Control(protocol, self.task_vocabs.items)
 
             # TCM
-            self.tcm = TCM(self.task_vocabs, beta)
+            self.tcm = TCM(self.task_vocabs, beta, extensions=extensions)
             nengo.Connection(self.ctrl.output_stimulus, self.tcm.input)
+            nengo.Connection(self.ctrl.output_lr, self.tcm.input_scale)
 
             # position counter
             self.pos = OneHotCounter(len(self.task_vocabs.positions))
@@ -158,11 +166,14 @@ class CUE(spa.Network):
             nengo.Connection(self.ctrl.output_stimulus, self.ose.input_item)
 
             # primacy effect
-            # FIXME time dependence for different protocols
+            def primacy(t):
+                epoch_t = protocol.epoch_duration
+                if epoch_t < protocol.pres_phase_duration:
+                    return -np.exp(-epoch_t)
+                else:
+                    return 0.
             nengo.Connection(
-                nengo.Node(
-                    lambda t: -np.exp(-t / 1.) if t < 12. else 0.),
-                self.tcm.net_m_tf.compare.threshold)
+                nengo.Node(primacy), self.tcm.net_m_tf.compare.threshold)
 
             self.serial_recall_phase = nengo.Ensemble(50, 1)
             nengo.Connection(
@@ -177,8 +188,10 @@ class CUE(spa.Network):
 
             # Use irrelevant position vector to bind distractors
             self.in_pos_gate = spa.State(self.task_vocabs.positions)
+
             nengo.Connection(self.pos.output, self.in_pos_gate.input,
                              transform=self.task_vocabs.positions.vectors.T)
+
             nengo.Connection(self.in_pos_gate.output, self.ose.input_pos)
             nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
 
@@ -210,6 +223,7 @@ class CUE(spa.Network):
             with nengo.presets.ThresholdingEnsembles(0.):
                 self.start_of_free_recall = nengo.Ensemble(50, 1)
                 self.start_of_serial_recall = nengo.Ensemble(50, 1)
+                self.start_of_pres_phase = nengo.Ensemble(50, 1)
             nengo.Connection(
                 self.ctrl.output_recall_phase, self.start_of_free_recall,
                 synapse=0.05, transform=-1)
@@ -221,6 +235,12 @@ class CUE(spa.Network):
                 synapse=0.05, transform=-1)
             nengo.Connection(
                 self.ctrl.output_recall_phase, self.start_of_serial_recall,
+                synapse=0.005)
+            nengo.Connection(
+                self.ctrl.output_pres_phase, self.start_of_pres_phase,
+                synapse=0.05, transform=-1)
+            nengo.Connection(
+                self.ctrl.output_pres_phase, self.start_of_pres_phase,
                 synapse=0.005)
             tr = -9 * np.ones((self.pos.input.size_in, 1))
             tr[0, 0] = 3.
@@ -234,6 +254,15 @@ class CUE(spa.Network):
                 synapse=0.1)
 
             inhibit_net(self.start_of_free_recall, self.pos, strength=10.)
+
+            nengo.Connection(
+                self.start_of_pres_phase, self.pos.input, transform=tr,
+                synapse=0.1)
+            nengo.Connection(
+                self.start_of_pres_phase, self.tcm.input_pos,
+                transform=np.atleast_2d(
+                    self.task_vocabs.positions.vectors[0]).T,
+                synapse=0.1)
 
             # Certain fraction of recalls use ordinal strategy
             if np.random.rand() >= ordinal_prob:
@@ -259,6 +288,35 @@ class CUE(spa.Network):
                 synapse=0.1)
             nengo.Connection(self.ctrl.output_stimulus, self.sim_th.input_a)
             nengo.Connection(self.last_item.output, self.sim_th.input_b)
+
+            if 'forward-assoc' in extensions:
+                self.cc = spa.Bind(self.task_vocabs.items)
+                nengo.Connection(
+                    self.pos.output_prev, self.cc.input_b,
+                    transform=self.task_vocabs.positions.vectors.T)
+                nengo.Connection(
+                    self.cc.output, self.tcm.forward_assoc.input_cue)
+
+                self.stage_a = GatedMemory(self.task_vocabs.items)
+                self.stage_b = GatedMemory(self.task_vocabs.items)
+                nengo.Connection(self.ctrl.output_stimulus, self.stage_a.input)
+                nengo.Connection(self.stage_a.output, self.stage_b.input)
+                nengo.Connection(self.stage_b.output, self.cc.input_a)
+                inhibit_net(self.ctrl.output_recall_phase, self.stage_a)
+                inhibit_net(self.ctrl.output_recall_phase, self.stage_b)
+                nengo.Connection(self.sim_th.output, self.stage_b.input_store)
+                nengo.Connection(
+                    nengo.Node(1.), self.stage_a.input_store, synapse=None)
+                nengo.Connection(
+                    self.sim_th.output, self.stage_a.input_store,
+                    transform=-1.)
+
+                self.sim_th2 = SimilarityThreshold(self.task_vocabs.items)
+                nengo.Connection(self.stage_a.output, self.sim_th2.input_a)
+                nengo.Connection(
+                    self.ctrl.output_stimulus, self.sim_th2.input_b)
+                nengo.Connection(
+                    self.sim_th2.output, self.stage_a.input_store, synapse=0.1)
 
             with nengo.Config(nengo.Ensemble) as cfg:
                 cfg[nengo.Ensemble].eval_points = nengo.dists.Uniform(0, 1)
@@ -329,6 +387,9 @@ class CUE(spa.Network):
                     self.ctrl.output_pres_phase, recall_net.buf.mem,
                     strength=6)
                 inhibit_net(self.ctrl.output_pres_phase, recall_net.inhibit)
+
+            if 'forward-assoc' in extensions:
+                nengo.Connection(self.recall.output, self.cc.input_a)
 
             nengo.Connection(self.recall.output, self.sim_th.input_a, transform=1.2)
             nengo.Connection(

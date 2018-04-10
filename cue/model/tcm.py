@@ -41,9 +41,12 @@ class TCM(spa.Network):
     """
 
     # pylint: disable=too-many-statements,too-many-arguments
-    def __init__(self, task_vocabs, beta, **kwargs):
+    def __init__(self, task_vocabs, beta, extensions=None, **kwargs):
         kwargs.setdefault('label', 'TCM')
         super(TCM, self).__init__(**kwargs)
+
+        if extensions is None:
+            extensions = set()
 
         self.task_vocabs = task_vocabs
 
@@ -56,6 +59,11 @@ class TCM(spa.Network):
             self.net_m_ft = AssocMatLearning(
                 self.task_vocabs.items, self.task_vocabs.contexts,
                 init_transform=self.task_vocabs.contexts.vectors)
+            self.input_scale = nengo.Node(size_in=1)
+            nengo.Connection(
+                self.input_scale, self.net_m_tf.input_scale, synapse=None)
+            nengo.Connection(
+                self.input_scale, self.net_m_ft.input_scale, synapse=None)
 
             # Stimulus input
             self.input = nengo.Node(size_in=self.task_vocabs.items.dimensions)
@@ -92,19 +100,125 @@ class TCM(spa.Network):
                 self.current_ctx.old.input_store)
 
             self.input_update_context = self.current_ctx.input_update_context
-            self.output_recalled_item = self.net_m_tf.output
+            self.output_recalled_item = nengo.Node(size_in=self.task_vocabs.items.dimensions)
+            nengo.Connection(self.net_m_tf.output, self.output_recalled_item, synapse=None)
+
+            if 'forward-assoc' in extensions:
+                self.forward_assoc = UnconstrainedAssocMatLearning(
+                    self.task_vocabs.positions, self.task_vocabs.items,
+                    learning_rate=0.5)
+                nengo.Connection(self.input, self.forward_assoc.input_target)
+                nengo.Connection(
+                    self.input_scale, self.forward_assoc.input_scale)
+                nengo.Connection(
+                    self.input_no_learn, self.forward_assoc.input_no_learn)
+                nengo.Connection(
+                    self.forward_assoc.output, self.output_recalled_item,
+                    synapse=None)
 
         self.inputs = dict(
             default=(self.input, self.task_vocabs.items),
             input_pos=(self.input_pos, self.task_vocabs.positions),
             input_update_context=(self.input_update_context, None),
-            input_no_learn=(self.input_no_learn, None))
+            input_no_learn=(self.input_no_learn, None),
+            input_scale=(self.input_scale, None))
         self.outputs = dict(
             output_recalled_item=(
                 self.output_recalled_item, self.task_vocabs.items))
 
 
-class AssocMatLearning(spa.Network):
+class UnconstrainedAssocMatLearning(spa.Network):
+    """Association matrix learning network.
+
+    Will not stop learning by itself.
+
+    Parameters
+    ----------
+    input_vocab : nengo_spa.Vocabulary or int
+        Input vocabulary.
+    output_vocab : nengo_spa.Vocabulary or int
+        Output vocabulary.
+    init_transform : ndarray
+        Initial transform from input to output (before learning).
+    learning_rate : float
+        AML learning rate.
+    decay : float
+        Factor to multiply weights with in each timestep (implements decay).
+    kwargs : dict
+        Passed on to `nengo_spa.Network`.
+
+    Attributes
+    ----------
+    input_vocab : nengo_spa.Vocabulary
+        Input vocabulary.
+    output_vocab : nengo_spa.Vocabulary
+        Output vocabulary.
+    input_cue : nengo.Node
+        Cue input.
+    input_target : nengo.Node
+        Target to learn.
+    input_no_learn : nengo.Node
+        Inhibits learning with an input of 1.
+    output : nengo.Node
+        Output of associated vector.
+    """
+    input_vocab = VocabularyOrDimParam(
+        'input_vocab', optional=False, readonly=True)
+    output_vocab = VocabularyOrDimParam(
+        'output_vocab', optional=False, readonly=True)
+
+    def __init__(
+            self, input_vocab=Default, output_vocab=Default,
+            init_transform=None, learning_rate=1., decay=1., **kwargs):
+        super(UnconstrainedAssocMatLearning, self).__init__(**kwargs)
+
+        self.input_vocab = input_vocab
+        self.output_vocab = output_vocab
+
+        with self:
+            self.state = spa.State(self.input_vocab, subdimensions=64)
+            for e in self.state.all_ensembles:
+                e.radius = 0.5
+                e.intercepts = nengo.dists.Uniform(-1., 1.)
+                e.eval_points = nengo.dists.UniformHypersphere(surface=False)
+            self.target = spa.State(self.output_vocab)
+            self.input_cue = self.state.input
+            self.input_target = self.target.input
+            self.output = nengo.Node(size_in=self.output_vocab.dimensions)
+            self.input_scale = nengo.Node(size_in=1)
+
+            self.input_no_learn = nengo.Node(size_in=1)
+            inhibit_net(self.input_no_learn, self.target)
+
+            for i, e in enumerate(self.state.all_ensembles):
+                sd = e.dimensions
+                start = i * sd
+                end = (i + 1) * sd
+                conn = nengo.Connection(
+                    e, self.output[start:end],
+                    learning_rule_type=AML(sd, learning_rate),
+                    function=lambda x, sd=sd: np.zeros(sd),  # noqa, pylint: disable=undefined-variable
+                    solver=nengo.solvers.LstsqL2(solver=RandomizedSVD()))
+                n = nengo.Node(size_in=sd + 2)
+                nengo.Connection(
+                    self.target.output[start:end], n[2:])
+                nengo.Connection(self.input_scale, n[0], synapse=None)
+                nengo.Connection(nengo.Node(decay), n[1], synapse=None)
+                nengo.Connection(n, conn.learning_rule)
+
+            if init_transform is not None:
+                nengo.Connection(
+                    self.state.output, self.output, transform=init_transform)
+
+        self.inputs = {
+            'default': (self.input_cue, self.input_vocab),
+            'target': (self.input_target, self.output_vocab),
+            'no_learn': (self.input_no_learn, None),
+            'scale': (self.input_scale, None)}
+        self.outputs = {'default': (self.output, self.output_vocab)}
+
+
+class AssocMatLearning(UnconstrainedAssocMatLearning):
     """Association matrix learning network.
 
     Will stop learning for a cue-target pair once the cue recalls the target
@@ -144,55 +258,15 @@ class AssocMatLearning(spa.Network):
     def __init__(
             self, input_vocab=Default, output_vocab=Default,
             init_transform=None, **kwargs):
-        super(AssocMatLearning, self).__init__(**kwargs)
-
-        self.input_vocab = input_vocab
-        self.output_vocab = output_vocab
+        super(AssocMatLearning, self).__init__(
+            input_vocab, output_vocab, init_transform, learning_rate=10.,
+            decay=.999973176, **kwargs)
 
         with self:
-            self.state = spa.State(self.input_vocab, subdimensions=64)
-            for e in self.state.all_ensembles:
-                e.radius = 0.5
-                e.intercepts = nengo.dists.Uniform(-1., 1.)
-                e.eval_points = nengo.dists.UniformHypersphere(surface=False)
-            self.target = spa.State(self.output_vocab)
-            self.input_cue = self.state.input
-            self.input_target = self.target.input
-            self.output = nengo.Node(size_in=self.output_vocab.dimensions)
-            self.scale = nengo.Node(1.)
-
-            for i, e in enumerate(self.state.all_ensembles):
-                sd = e.dimensions
-                start = i * sd
-                end = (i + 1) * sd
-                conn = nengo.Connection(
-                    e, self.output[start:end],
-                    learning_rule_type=AML(sd, 10.),
-                    function=lambda x, sd=sd: np.zeros(sd),  # noqa, pylint: disable=undefined-variable
-                    solver=nengo.solvers.LstsqL2(solver=RandomizedSVD()))
-                n = nengo.Node(size_in=sd + 1)
-                nengo.Connection(
-                    self.target.output[start:end], n[1:])
-                nengo.Connection(self.scale, n[0])
-                nengo.Connection(n, conn.learning_rule)
-
             self.compare = SimilarityThreshold(self.output_vocab)
             nengo.Connection(self.output, self.compare.input_a)
             nengo.Connection(self.input_target, self.compare.input_b)
             inhibit_net(self.compare.output, self.target, strength=1.)
-
-            if init_transform is not None:
-                nengo.Connection(
-                    self.state.output, self.output, transform=init_transform)
-
-            self.input_no_learn = nengo.Node(size_in=1)
-            inhibit_net(self.input_no_learn, self.target)
-
-        self.inputs = {
-            'default': (self.input_cue, self.input_vocab),
-            'target': (self.input_target, self.output_vocab),
-            'no_learn': (self.input_no_learn, None)}
-        self.outputs = {'default': (self.output, self.output_vocab)}
 
 
 class Context(spa.Network):
@@ -231,8 +305,8 @@ class Context(spa.Network):
             self.input = nengo.Node(size_in=self.vocab.dimensions)
 
             self.new_ctx = nengo.Node(size_in=self.vocab.dimensions)
-            self.current = GatedMemory(self.vocab)
-            self.old = GatedMemory(self.vocab)
+            self.current = GatedMemory(self.vocab, subdimensions=16)
+            self.old = GatedMemory(self.vocab, subdimensions=16)
 
             nengo.Connection(self.input, self.new_ctx, transform=beta)
             nengo.Connection(

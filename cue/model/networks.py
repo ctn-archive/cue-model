@@ -55,4 +55,9 @@ def OneHotCounter(n, **kwargs):
         net.input = net.state.input
         net.output = net.state.const
 
+        net.output_prev = nengo.Node(size_in=n)
+        nengo.Connection(
+            net.state.const, net.output_prev,
+            transform=np.roll(np.eye(n), 1, axis=1))
+
     return net
