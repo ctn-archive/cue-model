@@ -7,14 +7,14 @@ from statsmodels.stats.proportion import proportion_confint
 from cue.analysis.conversion import convert, register_conversion
 
 
-def bootstrap_ci(data, func, n=3000, p=0.95):
+def bootstrap_ci(data, func, n=10000, p=0.95):
     index = int(n * (1. - p) / 2.)
     r = func(np.random.choice(data, (n, len(data))), axis=1)
     r = np.sort(r)
     return r[index], r[-index]
 
 
-def bootstrap_diff_p(data1, data2, n=3000):
+def bootstrap_diff_p(data1, data2, n=10000):
     m1 = np.mean(data1)
     m2 = np.mean(data2)
     centered1 = data1 - m1
