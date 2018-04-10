@@ -105,13 +105,26 @@ class TCM(spa.Network):
 
             if 'forward-assoc' in extensions:
                 self.forward_assoc = UnconstrainedAssocMatLearning(
-                    self.task_vocabs.positions, self.task_vocabs.items,
+                    self.task_vocabs.items, self.task_vocabs.items,
                     learning_rate=0.5)
                 nengo.Connection(self.input, self.forward_assoc.input_target)
                 nengo.Connection(
                     self.input_scale, self.forward_assoc.input_scale)
                 nengo.Connection(
                     self.input_no_learn, self.forward_assoc.input_no_learn)
+                nengo.Connection(
+                    self.forward_assoc.output, self.output_recalled_item,
+                    synapse=None)
+            if 'direct-assoc' in extensions:
+                self.direct_assoc = UnconstrainedAssocMatLearning(
+                    self.task_vocabs.positions, self.task_vocabs.items,
+                    learning_rate=0.05)
+                nengo.Connection(self.input_pos, self.direct_assoc.input_cue)
+                nengo.Connection(self.input, self.direct_assoc.input_target)
+                nengo.Connection(
+                    self.input_scale, self.direct_assoc.input_scale)
+                nengo.Connection(
+                    self.input_no_learn, self.direct_assoc.input_no_learn)
                 nengo.Connection(
                     self.forward_assoc.output, self.output_recalled_item,
                     synapse=None)

@@ -14,7 +14,8 @@ n_trials = 25
 seeds = range(n_trials)
 
 
-pspace = Param(seed=seeds, trial=range(n_trials))
+pspace = Param(extension=['forward-assoc', 'direct-assoc']) * Param(
+    seed=seeds, trial=range(n_trials))
 backend = LoadBalancingBackend
 exclude_from_result = ['cl_context']
 pool_size = 4

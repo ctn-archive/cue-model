@@ -28,6 +28,7 @@ class HebbRepetitionTrial(pytry.PlotTrial):
         self.param("PyOpenCL context", cl_context=None)
         self.param("debug mode", debug=False)
         self.param("show progress bar", progress=True)
+        self.param("extension", extension='forward-assoc')
 
     def model(self, p):
         self.stim_provider = HebbRepStimulusProvider(
@@ -46,7 +47,7 @@ class HebbRepetitionTrial(pytry.PlotTrial):
             model.cue = CUE(
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
                 p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence,
-                extensions={'forward-assoc'})
+                extensions={p.extension})
             self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
             self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
 
