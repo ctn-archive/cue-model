@@ -27,5 +27,5 @@ def setup(proc_id):
 
 
 def execute(trial, **kwargs):
-    result = HebbRepetitionTrial().run(**kwargs)
+    result = HebbRepetitionTrial().run(progress=False, **kwargs)
     return result

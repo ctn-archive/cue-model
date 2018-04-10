@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import nengo
 import nengo_spa as spa
 import numpy as np
+import pyopencl
 import pytry
 
 from cue import Simulator
@@ -26,6 +27,7 @@ class HebbRepetitionTrial(pytry.PlotTrial):
         self.param("min. recall evidence", min_evidence=0.015)
         self.param("PyOpenCL context", cl_context=None)
         self.param("debug mode", debug=False)
+        self.param("show progress bar", progress=True)
 
     def model(self, p):
         self.stim_provider = HebbRepStimulusProvider(
@@ -60,7 +62,10 @@ class HebbRepetitionTrial(pytry.PlotTrial):
         return model
 
     def evaluate(self, p, plt):
-        with Simulator(self.model(p), context=p.cl_context, progress_bar=False) as sim:
+        context = p.cl_context
+        if context is None:
+            context = pyopencl.create_some_context(interactive=True)
+        with Simulator(self.model(p), context=context, progress_bar=p.progress) as sim:
             sim.run(self.stim_provider.total_duration)
 
         t = sim.trange()
@@ -80,10 +85,10 @@ class HebbRepetitionTrial(pytry.PlotTrial):
             'responses': responses,
             # 'pos': sim.data[self.p_pos],
             # 'recalls': sim.data[self.p_recalls],
-            # 'vocab_vectors': self.vocabs.items.vectors,
-            # 'vocab_keys': list(self.vocabs.items.keys()),
-            # 'pos_vectors': self.vocabs.positions.vectors,
-            # 'pos_keys': list(self.vocabs.positions.keys()),
+            'vocab_vectors': self.vocabs.items.vectors,
+            'vocab_keys': list(self.vocabs.items.keys()),
+            'pos_vectors': self.vocabs.positions.vectors,
+            'pos_keys': list(self.vocabs.positions.keys()),
             'lists': self.stim_provider.lists,
         }
         if p.debug:
