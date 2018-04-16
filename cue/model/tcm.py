@@ -126,7 +126,7 @@ class TCM(spa.Network):
                 nengo.Connection(
                     self.input_no_learn, self.direct_assoc.input_no_learn)
                 nengo.Connection(
-                    self.forward_assoc.output, self.output_recalled_item,
+                    self.direct_assoc.output, self.output_recalled_item,
                     synapse=None)
 
         self.inputs = dict(
