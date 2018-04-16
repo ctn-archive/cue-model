@@ -21,9 +21,9 @@ class CueTrial(pytry.NengoTrial):
         self.param("OSE memory decay", gamma=0.9775)
         self.param("OSE memory threshold", ose_thr=0.1)
         self.param("TCM prob. to recall from beginning", ordinal_prob=.1)
-        self.param("noise in recall", noise=0.009)
-        self.param("min. recall evidence", min_evidence=0.035)
-        self.param("protocol", protocol='immed')
+        self.param("noise in recall", noise=0.015)
+        self.param("min. recall evidence", min_evidence=0.04)
+        self.param("protocol", protocol='immediate')
         self.param("recall duration", recall_duration=60.)
 
     def model(self, p):
