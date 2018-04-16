@@ -106,7 +106,7 @@ class TCM(spa.Network):
             if 'forward-assoc' in extensions:
                 self.forward_assoc = UnconstrainedAssocMatLearning(
                     self.task_vocabs.items, self.task_vocabs.items,
-                    learning_rate=0.5)
+                    learning_rate=.25)
                 nengo.Connection(self.input, self.forward_assoc.input_target)
                 nengo.Connection(
                     self.input_scale, self.forward_assoc.input_scale)
