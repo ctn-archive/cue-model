@@ -49,9 +49,10 @@ class StimulusProvider(object):
     distractor_rate : float
         Rate of distractors in items per second.
     """
-    def __init__(self, proto, distractor_rate):
+    def __init__(self, proto, distractor_rate, recall_duration):
         self.proto = proto
         self.distractor_rate = distractor_rate
+        self.recall_duration = recall_duration
 
     @staticmethod
     def get_distractor(epoch, i):
@@ -72,6 +73,14 @@ class StimulusProvider(object):
     @property
     def n_epochs(self):
         return self.proto.n_items
+
+    @property
+    def epoch_duration(self):
+        return self.proto.pres_phase_duration + self.recall_duration
+
+    @property
+    def pres_phase_duration(self):
+        return self.proto.pres_phase_duration
 
     @property
     def n_distractors_per_epoch(self):

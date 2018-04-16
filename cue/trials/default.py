@@ -28,7 +28,8 @@ class CueTrial(pytry.NengoTrial):
 
     def model(self, p):
         self.proto = PROTOCOLS[p.protocol]
-        self.stim_provider = StimulusProvider(self.proto, p.distractor_rate)
+        self.stim_provider = StimulusProvider(
+            self.proto, p.distractor_rate, p.recall_duration)
         self.vocabs = Vocabularies(
             self.stim_provider, p.item_d, p.context_d, self.proto.n_items + 3,
             np.random.RandomState(p.seed + 1))
