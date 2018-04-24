@@ -216,6 +216,10 @@ PROTOCOLS = {
     'contdist': Recall(
         n_items=12, pi=1.2, ipi=16., ri=16., serial=False, lr=None,
         exp_data=_datapath('HowaKaha99/Ltr3.dat')),
+    'no_scopolamine': Recall(
+        n_items=16, pi=2., ipi=0., ri=0., serial=False,
+        lr=lambda t: 1. if t < 32. else 0.01, exp_data=None),
     'scopolamine': Recall(
-        n_items=16, pi=2., ipi=0., ri=0., serial=False, lr=None, exp_data=None),
+        n_items=16, pi=2., ipi=0., ri=0., serial=False,
+        lr=lambda t: 0.01, exp_data=None),
 }
