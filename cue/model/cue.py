@@ -360,13 +360,11 @@ class CUE(spa.Network):
             self.pos_recall = NeuralAccumulatorDecisionProcess(
                 self.task_vocabs.positions, noise=recall_noise,
                 min_evidence=min_evidence)
-            # self.pos_recalled_gate = spa.State(self.task_vocabs.items)
-            # nengo.Connection(
-                # self.pos_recalled_gate.output, self.tcm.input_pos)
 
             self.tcm_recall_gate = spa.State(self.task_vocabs.items)
-            nengo.Connection(
-                self.tcm.output_recalled_item, self.tcm_recall_gate.input)
+            if 'disable_ltm_recall' not in extensions:
+                nengo.Connection(
+                    self.tcm.output_recalled_item, self.tcm_recall_gate.input)
             inhibit_net(self.ctrl.output_pres_phase, self.tcm_recall_gate)
 
             inhibit_net(
@@ -375,13 +373,6 @@ class CUE(spa.Network):
             for recall_net in (self.recall, self.pos_recall):
                 nengo.Connection(
                     self.tcm_recall_gate.output, recall_net.input_list[0])
-                # inhibit_net(
-                    # self.ctrl.output_serial_recall, recalled_gate, strength=6)
-                # nengo.Connection(recall_net.output, recalled_gate.input)
-                # nengo.Connection(recall_net.output, self.sim_th.input_a, transform=1.2)
-                # nengo.Connection(
-                    # recall_net.output, self.last_item.input, transform=0.1,
-                    # synapse=0.1)
 
                 inhibit_net(self.ctrl.output_pres_phase, recall_net.state)
                 inhibit_net(
@@ -392,7 +383,8 @@ class CUE(spa.Network):
             if 'forward-assoc' in extensions:
                 nengo.Connection(self.recall.output, self.cc.input_a)
 
-            nengo.Connection(self.recall.output, self.sim_th.input_a, transform=1.2)
+            nengo.Connection(
+                self.recall.output, self.sim_th.input_a, transform=1.2)
             nengo.Connection(
                 self.recall.output, self.last_item.input, transform=0.1,
                 synapse=0.1)
@@ -436,7 +428,9 @@ class CUE(spa.Network):
 
             # Short term recall
             self.ose_recall_gate = spa.State(self.task_vocabs.items)
-            nengo.Connection(self.ose.output, self.ose_recall_gate.input, transform=0.5)
+            if 'disable_stm_recall' not in extensions:
+                nengo.Connection(
+                    self.ose.output, self.ose_recall_gate.input, transform=0.5)
             nengo.Connection(
                 self.ose_recall_gate.output, self.recall.input_list[1])
             self.ose_recall_threshold = nengo.Node(ose_thr)

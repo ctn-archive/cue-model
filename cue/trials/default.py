@@ -26,8 +26,14 @@ class CueTrial(pytry.NengoTrial):
         self.param("protocol", protocol='immediate')
         self.param("recall duration", recall_duration=60.)
         self.param("weight decay", decay=1.)
+        self.param("extension", extension=None)
 
     def model(self, p):
+        if p.extension is None:
+            extensions = set()
+        else:
+            extenions = {p.extension}
+
         self.proto = PROTOCOLS[p.protocol]
         self.stim_provider = StimulusProvider(
             self.proto, p.distractor_rate, p.recall_duration)
@@ -39,7 +45,7 @@ class CueTrial(pytry.NengoTrial):
             model.cue = CUE(
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
                 p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence,
-                decay=p.decay)
+                decay=p.decay, extensions=extensions)
             self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
             self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
 
