@@ -134,7 +134,7 @@ class CUE(spa.Network):
     def __init__(
             self, protocol, task_vocabs, beta, gamma=0.9775, ose_thr=0.2,
             ordinal_prob=0.2, recall_noise=0., min_evidence=0.025,
-            extensions=None, **kwargs):
+            decay=decay, extensions=None, **kwargs):
         kwargs.setdefault('label', 'CUE')
         super(CUE, self).__init__(**kwargs)
 
@@ -150,7 +150,8 @@ class CUE(spa.Network):
             self.ctrl = Control(protocol, self.task_vocabs.items)
 
             # TCM
-            self.tcm = TCM(self.task_vocabs, beta, extensions=extensions)
+            self.tcm = TCM(
+                self.task_vocabs, beta, extensions=extensions, decay=decay)
             nengo.Connection(self.ctrl.output_stimulus, self.tcm.input)
             nengo.Connection(self.ctrl.output_lr, self.tcm.input_scale)
 

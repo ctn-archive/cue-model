@@ -41,7 +41,7 @@ class TCM(spa.Network):
     """
 
     # pylint: disable=too-many-statements,too-many-arguments
-    def __init__(self, task_vocabs, beta, extensions=None, **kwargs):
+    def __init__(self, task_vocabs, beta, decay=1., extensions=None, **kwargs):
         kwargs.setdefault('label', 'TCM')
         super(TCM, self).__init__(**kwargs)
 
@@ -55,10 +55,12 @@ class TCM(spa.Network):
 
             # Association networks
             self.net_m_tf = AssocMatLearning(
-                self.task_vocabs.contexts, self.task_vocabs.items)
+                self.task_vocabs.contexts, self.task_vocabs.items,
+                decay=decay)
             self.net_m_ft = AssocMatLearning(
                 self.task_vocabs.items, self.task_vocabs.contexts,
-                init_transform=self.task_vocabs.contexts.vectors)
+                init_transform=self.task_vocabs.contexts.vectors,
+                decay=decay)
             self.input_scale = nengo.Node(size_in=1)
             nengo.Connection(
                 self.input_scale, self.net_m_tf.input_scale, synapse=None)
@@ -273,7 +275,7 @@ class AssocMatLearning(UnconstrainedAssocMatLearning):
             init_transform=None, **kwargs):
         super(AssocMatLearning, self).__init__(
             input_vocab, output_vocab, init_transform, learning_rate=10.,
-            decay=.999973176, **kwargs)
+            decay=1., **kwargs)
 
         with self:
             self.compare = SimilarityThreshold(self.output_vocab)

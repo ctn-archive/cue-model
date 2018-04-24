@@ -25,6 +25,7 @@ class CueTrial(pytry.NengoTrial):
         self.param("min. recall evidence", min_evidence=0.04)
         self.param("protocol", protocol='immediate')
         self.param("recall duration", recall_duration=60.)
+        self.param("weight decay", decay=1.)
 
     def model(self, p):
         self.proto = PROTOCOLS[p.protocol]
@@ -37,7 +38,8 @@ class CueTrial(pytry.NengoTrial):
         with spa.Network(seed=p.seed) as model:
             model.cue = CUE(
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
-                p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence)
+                p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence,
+                decay=p.decay)
             self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
             self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
 
