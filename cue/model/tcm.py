@@ -272,10 +272,10 @@ class AssocMatLearning(UnconstrainedAssocMatLearning):
 
     def __init__(
             self, input_vocab=Default, output_vocab=Default,
-            init_transform=None, **kwargs):
+            init_transform=None, decay=1., **kwargs):
         super(AssocMatLearning, self).__init__(
             input_vocab, output_vocab, init_transform, learning_rate=10.,
-            decay=1., **kwargs)
+            decay=decay, **kwargs)
 
         with self:
             self.compare = SimilarityThreshold(self.output_vocab)
