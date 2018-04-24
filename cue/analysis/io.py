@@ -41,13 +41,17 @@ class HowaKaha99FrameReader(object):
             line = next_line_or_stop(self._fd)
             while i < 2 and line.strip() == '':
                 line = next_line_or_stop(self._fd)
+            if i == 1:
+                irt = [float(x) / 1000. for x in line.split()]
+                irt = irt + (12 - len(irt)) * [np.nan]
         assert line.strip() == '', line
 
         df = pd.DataFrame({
             'trial': self.trial,
             'subject': subject,
             'pos': np.arange(self.n_items),
-            'recalled_pos': responses - 1
+            'recalled_pos': responses - 1,
+            'irt': irt,
         }).set_index(['subject', 'trial', 'pos'])
         self.trial += 1
         return df
