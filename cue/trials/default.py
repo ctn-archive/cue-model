@@ -5,7 +5,7 @@ import nengo_spa as spa
 import numpy as np
 import pytry
 
-from cue.analysis.neural import model_out_to_responses
+from cue.analysis.neural import model_out_to_responses, model_out_to_timings
 from cue.model import CUE, Vocabularies
 from cue.protocols import PROTOCOLS, StimulusProvider
 
@@ -99,9 +99,12 @@ class CueTrial(pytry.NengoTrial):
         responses = model_out_to_responses(
             recall_vocab, sim.trange(), sim.data[self.p_recalls],
             sim.data[self.p_pos], self.proto)
+        response_times = model_out_to_timings(
+            recall_vocab, sim.trange(), sim.data[self.p_recalls], self.proto)
 
         result = {
             'responses': responses,
+            'timings': response_times,
             'pos': sim.data[self.p_pos],
             'recalls': sim.data[self.p_recalls],
             'positions': np.arange(self.proto.n_items),

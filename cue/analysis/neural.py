@@ -33,3 +33,13 @@ def model_out_to_responses(recall_vocab, t, model_out, pos_out, proto):
                 responses.append(float(x))
     responses = responses + (proto.n_items - len(responses)) * [np.nan]
     return responses
+
+
+def model_out_to_timings(recall_vocab, t, model_out, proto):
+    recall_output = spa.similarity(model_out, recall_vocab) > 0.8
+    recall_times = []
+    for x in recall_output.T:
+        nz = np.nonzero(x)[0]
+        if len(nz) > 0:
+            recall_times.append(t[nz[0]] - proto.pres_phase_duration)
+    return recall_times + (proto.n_items - len(recall_times)) * [np.nan]
