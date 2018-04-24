@@ -24,8 +24,4 @@ setup(
         'seaborn',
         'statsmodels',
     ],
-    dependency_links=[
-        'git+ssh://git@github.com/nengo/nengo_extras.git'
-        '@d63e12aa787419fcafed32027105583d614e9e6d#egg=nengo-extras-0.1.0.dev0'
-    ]
 )

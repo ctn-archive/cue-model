@@ -20,7 +20,7 @@ Further dependencies should be installed automatically during the installation:
 
 * [Nengo 2.5 or later](https://www.nengo.ai/)
 * [nengo_spa 0.3.x](https://github.com/nengo/nengo_spa)
-* [nengo_extras @d63e12aa787419fcafed32027105583d614e9e6d](https://github.com/nengo/nengo_extras)
+* [nengo_extras](https://github.com/nengo/nengo_extras)
 * matplotlib
 * NumPy
 * SciPy
