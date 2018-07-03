@@ -198,6 +198,62 @@ class HebbRepStimulusProvider(object):
         return stimulus_fn
 
 
+class MixedSelStimulusProvider(object):
+    def __init__(self, n_total_items, n_items_per_list, pi, delay_i):
+        self.n_total_items = n_total_items
+        self.n_items_per_list = n_items_per_list
+        self.pi = pi
+        self.delay_i = delay_i
+
+        self.serial = True
+        self.l = self.make_list()
+
+    @property
+    def n_items(self):
+        return self.n_items_per_list
+
+    def make_list(self):
+        return np.random.choice(
+            np.arange(self.n_total_items), self.n_items_per_list,
+            replace=False)
+
+    def get_all_items(self):
+        return ['V' + str(i) for i in range(self.proto.n_total_items)]
+
+    @property
+    def pres_phase_duration(self):
+        return self.n_items_per_list * self.pi
+
+    @property
+    def total_duration(self):
+        return self.pres_phase_duration + self.recall_duration
+
+    @property
+    def proto(self):
+        return self
+
+    def is_pres_phase(self, t):
+        return True
+
+    def is_recall_phase(self, t):
+        return False
+
+    def make_stimulus_fn(self):
+        l = self.l
+        def stimulus_fn(t, l=l):
+            if t <= self.delay_i:
+                return '0'
+            elif t <= self.delay_i + self.pi:
+                return l[0]
+            elif t <= 2 * self.delay_i + self.pi:
+                return '0'
+            elif t <= 2 * self.delay_i + 2 * self.pi:
+                return l[1]
+            else:
+                return '0'
+        return stimulus_fn
+
+
 def _datapath(path):
     return os.path.join(
         os.path.dirname(__file__), '../data/experimental', path)
