@@ -1,4 +1,5 @@
 from collections import namedtuple
+import itertools
 import os.path
 
 import numpy as np
@@ -199,14 +200,19 @@ class HebbRepStimulusProvider(object):
 
 
 class MixedSelStimulusProvider(object):
-    def __init__(self, n_total_items, n_items_per_list, pi, delay_i):
-        self.n_total_items = n_total_items
-        self.n_items_per_list = n_items_per_list
-        self.pi = pi
-        self.delay_i = delay_i
+    def __init__(self, list_id):
+        self.lists = list(itertools.permutations(range(3)))
+        self.n_total_items = 3
+        self.n_items_per_list = 3
+        self.pi = 0.5
+        self.delay_i = 1.
+        self.prechoice_i = 1.5
 
         self.serial = True
-        self.l = self.make_list()
+        self.l = self.lists[list_id]
+        self.n_distractors_per_epoch = 0
+        self.lr = None
+        self.recall_duration = 0.
 
     @property
     def n_items(self):
@@ -222,11 +228,15 @@ class MixedSelStimulusProvider(object):
 
     @property
     def pres_phase_duration(self):
-        return self.n_items_per_list * self.pi
+        return self.epoch_duration
 
     @property
     def total_duration(self):
         return self.pres_phase_duration + self.recall_duration
+
+    @property
+    def epoch_duration(self):
+        return self.n_items_per_list * (self.pi + self.delay_i) + self.prechoice_i
 
     @property
     def proto(self):
@@ -239,16 +249,19 @@ class MixedSelStimulusProvider(object):
         return False
 
     def make_stimulus_fn(self):
-        l = self.l
-        def stimulus_fn(t, l=l):
+        def stimulus_fn(t, l=self.l):
             if t <= self.delay_i:
                 return '0'
             elif t <= self.delay_i + self.pi:
-                return l[0]
+                return 'V' + str(l[0])
             elif t <= 2 * self.delay_i + self.pi:
                 return '0'
             elif t <= 2 * self.delay_i + 2 * self.pi:
-                return l[1]
+                return 'V' + str(l[1])
+            elif t <= 3 * self.delay_i + 2 * self.pi:
+                return '0'
+            elif t <= 3 * self.delay_i + 3 * self.pi:
+                return 'V' + str(l[2])
             else:
                 return '0'
         return stimulus_fn

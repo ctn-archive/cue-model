@@ -10,11 +10,11 @@ from cue.trials import MixedSelTrial
 
 
 rng = np.random.RandomState(9)
-n_trials = 10
-seeds = range(n_trials)
+n_sequences = 6
+seeds = [230] * n_sequences
 
 
-pspace = Param(seed=seeds, trial=range(n_trials))
+pspace = Param(seed=seeds, sequence=range(n_sequences))
 backend = LoadBalancingBackend
 exclude_from_result = ['cl_context']
 pool_size = 4
@@ -26,6 +26,6 @@ def setup(proc_id):
     return {'cl_context': context}
 
 
-def execute(trial, **kwargs):
+def execute(**kwargs):
     result = MixedSelTrial().run(progress=False, **kwargs)
     return result
