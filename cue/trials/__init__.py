@@ -1,3 +1,3 @@
 from .default import CueTrial
 from .hebb_trial import HebbRepetitionTrial
-from .mixexsel_trial import MixedSelTrial
+from .mixedsel_trial import MixedSelTrial
