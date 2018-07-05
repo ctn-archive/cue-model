@@ -105,7 +105,9 @@ class Vocabularies(FrozenObject):
     positions = VocabularyOrDimParam(
         'positions', optional=False, readonly=True)
 
-    def __init__(self, stim_provider, items, contexts, n_pos, rng=None):
+    def __init__(
+            self, stim_provider, items, contexts, n_pos, rng=None,
+            extra_pos=3):
         super(Vocabularies, self).__init__()
 
         vocabs = Config.default(spa.Network, 'vocabs')
@@ -126,7 +128,7 @@ class Vocabularies(FrozenObject):
         for i in range(self.items.dimensions):
             self.contexts.populate('CTX' + str(i))
 
-        for i in range(n_pos + 3):
+        for i in range(n_pos + extra_pos):
             self.positions.populate('P' + str(i))
 
 
