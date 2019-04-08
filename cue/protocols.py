@@ -279,6 +279,9 @@ PROTOCOLS = {
     'immediate': Recall(
         n_items=12, pi=1., ipi=0., ri=0., serial=False, lr=None,
         exp_data=_datapath('HowaKaha99/Immed.dat')),
+    'immediate_polyn2009': Recall(
+        n_items=24, pi=3., ipi=0., ri=0., serial=False, lr=None,
+        exp_data=None),
     'delayed': Recall(
         n_items=12, pi=1.2, ipi=0., ri=16., serial=False, lr=None,
         exp_data=_datapath('HowaKaha99/Ltr0.dat')),
