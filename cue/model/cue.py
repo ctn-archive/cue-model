@@ -134,7 +134,7 @@ class CUE(spa.Network):
     def __init__(
             self, protocol, task_vocabs, beta, gamma=0.9775, ose_thr=0.2,
             ordinal_prob=0.2, recall_noise=0., min_evidence=0.025,
-            decay=decay, extensions=None, **kwargs):
+            decay=1., extensions=None, **kwargs):
         kwargs.setdefault('label', 'CUE')
         super(CUE, self).__init__(**kwargs)
 
