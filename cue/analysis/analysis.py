@@ -40,9 +40,9 @@ def p_first_recall(recalls):
     ci_low, ci_upp = proportion_confint(hist, n, method='beta')
     hist /= n
     hist = hist.to_frame(name='p_first')
-    hist.index += 1
     hist['ci_low'] = hist['p_first'] - ci_low
     hist['ci_upp'] = ci_upp - hist['p_first']
+    hist.index += 1
     hist.name = "Probabilitiy of first recall"
     return hist
 
