@@ -170,7 +170,7 @@ class CUE(spa.Network):
 
             # primacy effect
             def primacy(t):
-                epoch_t = protocol.epoch_duration
+                epoch_t = t % protocol.epoch_duration
                 if epoch_t < protocol.pres_phase_duration:
                     return -np.exp(-epoch_t)
                 else:

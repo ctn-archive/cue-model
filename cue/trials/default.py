@@ -10,7 +10,7 @@ from cue.model import CUE, Vocabularies
 from cue.protocols import PROTOCOLS, StimulusProvider
 
 
-class CueTrial(pytry.NengoTrial):
+class CueTrial(pytry.PlotTrial):
     # pylint: disable=attribute-defined-outside-init,arguments-differ
 
     def params(self):
@@ -27,6 +27,9 @@ class CueTrial(pytry.NengoTrial):
         self.param("recall duration", recall_duration=60.)
         self.param("weight decay", decay=1.)
         self.param("extension", extension=None)
+        self.param("PyOpenCL context", cl_context=None)
+        self.param("debug mode", debug=False)
+        self.param("show progress bar", progress=True)
 
     def model(self, p):
         if p.extension is None:
@@ -98,8 +101,17 @@ class CueTrial(pytry.NengoTrial):
 
         return model
 
-    def evaluate(self, p, sim, plt):
-        sim.run(self.proto.duration + p.recall_duration)
+    def evaluate(self, p, plt):
+        context = p.cl_context
+        if context is None:
+            from nengo import Simulator
+            kwargs = dict(progress_bar=p.progress)
+        else:
+            from cue import Simulator
+            import pyopencl
+            kwargs = dict(context=context, progress_bar=p.progress)
+        with Simulator(self.model(p), **kwargs) as sim:
+            sim.run(self.stim_provider.epoch_duration)
 
         recall_vocab = self.vocabs.items.create_subset(self.stim_provider.get_all_items())
         responses = model_out_to_responses(
@@ -111,8 +123,6 @@ class CueTrial(pytry.NengoTrial):
         result = {
             'responses': responses,
             'timings': response_times,
-            'pos': sim.data[self.p_pos],
-            'recalls': sim.data[self.p_recalls],
             'positions': np.arange(self.proto.n_items),
             'vocab_vectors': self.vocabs.items.vectors,
             'vocab_keys': list(self.vocabs.items.keys()),
