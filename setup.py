@@ -13,7 +13,7 @@ setup(
     provides=['cue'],
     install_requires=[
         'matplotlib',
-        'nengo[all_solvers]',
+        'nengo[optional]>=2.8,<2.9',
         'nengo_extras',
         'nengo_spa==0.3',
         'numpy',
