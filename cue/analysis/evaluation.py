@@ -169,12 +169,15 @@ def evaluate_crp(proto, exp_data, model_data, ax=None, limit=6):
             marker='o', label="model", ax=ax,
             yerr=np.copy(ev_model_data[['ci_low', 'ci_upp']].values.T))
 
-    assert np.all(ev_exp_data.index == ev_model_data.index)
-    sel = (np.abs(ev_model_data.index) <= limit) & (ev_model_data.index != 0)
-    logger.info(
-        'crp: %i/%i', int(np.sum(interval_overlap_df(
-            'crp', ev_model_data[sel], ev_exp_data[sel]))),
-        len(ev_model_data['crp'][sel]))
+    if exp_data is not None:
+        assert np.all(ev_exp_data.index == ev_model_data.index)
+        sel = (
+            (np.abs(ev_model_data.index) <= limit)
+            & (ev_model_data.index != 0))
+        logger.info(
+            'crp: %i/%i', int(np.sum(interval_overlap_df(
+                'crp', ev_model_data[sel], ev_exp_data[sel]))),
+            len(ev_model_data['crp'][sel]))
 
     ax.set_xlim(-limit, limit)
     ax.set_ylim(bottom=0.)
