@@ -47,9 +47,11 @@ def p_first_recall(recalls):
     return hist
 
 
-def crp(recalls):
+def crp(recalls, max_out_pos=None):
     """Conditional response probability."""
     recalls = convert(recalls, 'melted').data
+
+    n_pos = recalls.index.get_level_values('pos').unique().size
 
     def exclude_repetitions(x):
         values = x.values
@@ -66,11 +68,13 @@ def crp(recalls):
             recalls.drop([k], axis=1, inplace=True)
     recalls['lag'] = -recalls.groupby(level='trial').diff(-1)
 
+    if max_out_pos:
+        recalls = recalls.iloc[
+                recalls.index.get_level_values('pos') < max_out_pos]
+
     numerator = pd.DataFrame(
         recalls.reset_index().groupby(['trial', 'lag']).size()).rename(
             columns={0: 'num'})
-
-    n_pos = recalls.index.get_level_values('pos').unique().size
 
     def get_denom(x):
         to_recall = list(range(n_pos))
