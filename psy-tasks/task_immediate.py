@@ -18,14 +18,15 @@ pspace = Param(
     seed=seeds,
     trial=range(n_trials),
     recall_duration=45.,
-    noise=0.009,
-    min_evidence=0.02)
+    noise=0.015,
+    min_evidence=0.025,
+    ordinal_prob=0.1)
 exclude_from_result = ['cl_context']
 min_items = 1
-pool_size = 1
-max_jobs = 100
 
 if platform.node().startswith('gra') or platform.node().startswith('cedar'):
+    pool_size = 1
+    max_jobs = 100
     workdir = '/scratch/jgosmann/cue'
     scheduler = Slurm(workdir)
     def timelimit(name):
@@ -53,7 +54,7 @@ elif platform.node().startswith('ctngpu'):
     import pyopencl
 
     def setup(proc_id):
-        context = pyopencl.create_some_context(answers=[1, proc_id])
+        context = pyopencl.create_some_context(answers=[0, proc_id])
         return {'cl_context': context}
 
 def execute(trial, **kwargs):
