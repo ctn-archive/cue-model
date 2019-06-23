@@ -114,8 +114,6 @@ class CueTrial(pytry.PlotTrial):
 
         result = {
             'responses': responses,
-            'pos': sim.data[self.p_pos],
-            'recalls': sim.data[self.p_recalls],
             'positions': np.arange(self.proto.n_items),
             'vocab_vectors': self.vocabs.items.vectors,
             'vocab_keys': list(self.vocabs.items.keys()),
