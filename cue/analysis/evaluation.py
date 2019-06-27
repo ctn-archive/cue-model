@@ -283,10 +283,14 @@ def plot_dist_stats(data, ax=None, **kwargs):
 
 
 def evaluate_dist_overlap(exp_data, model_data):
-    x = (int(interval_overlap_aggregate(exp_data, model_data, np.mean)) +
-         int(interval_overlap_aggregate(exp_data, model_data, np.std)) +
-         int(interval_overlap_aggregate(exp_data, model_data, kurtosis)))
-    logger.info('dist_overlap: %i/3', x)
+    mean_overlap = interval_overlap_aggregate(exp_data, model_data, np.mean)
+    std_overlap = interval_overlap_aggregate(exp_data, model_data, np.std)
+    kurt_overlap = interval_overlap_aggregate(exp_data, model_data, kurtosis)
+    total = int(mean_overlap) + int(std_overlap) + int(kurt_overlap)
+    logger.info('dist_overlap: %i/3', total)
+    logger.info('  mean_overlap: %r', mean_overlap)
+    logger.info('  std_overlap: %r', std_overlap)
+    logger.info('  kurt_overlap: %r', kurt_overlap)
 
 
 def locate_results_file(path):
