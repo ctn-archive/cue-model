@@ -132,7 +132,7 @@ class StimulusProvider(object):
 
 class HebbRepStimulusProvider(object):
     def __init__(
-            self, n_total_items, n_items_per_list, n_lists, rep_list_freq, pi,
+            self, n_total_items, n_items_per_list, n_lists, rep_pattern, pi,
             recall_duration):
         self.n_total_items = n_total_items
         self.n_items_per_list = n_items_per_list
@@ -144,10 +144,10 @@ class HebbRepStimulusProvider(object):
         self.n_distractors_per_epoch = 0
         self.lr = lambda t: 1.
 
-        self.repeated_list = self.make_list()
+        self.fixed_lists = [self.make_list() for _ in rep_pattern]
         self.lists = [
-            self.repeated_list if (i + 1) % rep_list_freq == 0
-            else self.make_list()
+            self.fixed_lists[i % len(rep_pattern)]
+            if rep_pattern[i % len(rep_pattern)] else self.make_list()
             for i in range(self.n_lists)]
 
     @property

@@ -30,13 +30,14 @@ class HebbRepetitionTrial(pytry.PlotTrial):
         self.param("show progress bar", progress=True)
         self.param("extension", extension='forward-assoc')
         self.param("weight decay", decay=.999973176)
+        self.param("repetition pattern", rep_pattern='001')
 
     def model(self, p):
         self.stim_provider = HebbRepStimulusProvider(
             n_total_items=9,
             n_items_per_list=9,
             n_lists=24,
-            rep_list_freq=3,
+            rep_pattern=[x == '1' for x in p.rep_pattern],
             pi=1.,
             recall_duration=60.)
         self.vocabs = Vocabularies(
