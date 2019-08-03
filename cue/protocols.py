@@ -132,8 +132,8 @@ class StimulusProvider(object):
 
 class HebbRepStimulusProvider(object):
     def __init__(
-            self, n_total_items, n_items_per_list, n_lists, rep_pattern, pi,
-            recall_duration):
+            self, n_total_items, n_items_per_list, n_lists, rep_pattern,
+            rand_pos, pi, recall_duration):
         self.n_total_items = n_total_items
         self.n_items_per_list = n_items_per_list
         self.n_lists = n_lists
@@ -146,9 +146,17 @@ class HebbRepStimulusProvider(object):
 
         self.fixed_lists = [self.make_list() for _ in rep_pattern]
         self.lists = [
-            self.fixed_lists[i % len(rep_pattern)]
+            self.rand_pos(self.fixed_lists[i % len(rep_pattern)], rand_pos)
             if rep_pattern[i % len(rep_pattern)] else self.make_list()
             for i in range(self.n_lists)]
+
+    def rand_pos(self, stim_list, pos):
+        if pos is None:
+            return stim_list
+        else:
+            new_list = stim_list[:]
+            new_list[pos] = np.random.choice(np.arange(self.n_total_items))
+            return new_list
 
     @property
     def n_items(self):

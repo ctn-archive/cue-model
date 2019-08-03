@@ -31,13 +31,19 @@ class HebbRepetitionTrial(pytry.PlotTrial):
         self.param("extension", extension='forward-assoc')
         self.param("weight decay", decay=.999973176)
         self.param("repetition pattern", rep_pattern='001')
+        self.param("randomize position", rand_pos='None')
 
     def model(self, p):
+        if p.rand_pos == 'None':
+            rand_pos = None
+        else:
+            rand_pos = int(rand_pos)
         self.stim_provider = HebbRepStimulusProvider(
             n_total_items=9,
             n_items_per_list=9,
             n_lists=24,
             rep_pattern=[x == '1' for x in p.rep_pattern],
+            rand_pos=rand_pos,
             pi=1.,
             recall_duration=60.)
         self.vocabs = Vocabularies(
