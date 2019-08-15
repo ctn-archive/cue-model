@@ -23,7 +23,7 @@ max_jobs = 1
 
 
 def setup(proc_id):
-    context = pyopencl.create_some_context(answers=[1, proc_id])
+    context = pyopencl.create_some_context(answers=[0, proc_id])
     return {'cl_context': context}
 
 

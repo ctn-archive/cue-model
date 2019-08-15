@@ -37,7 +37,7 @@ class HebbRepetitionTrial(pytry.PlotTrial):
         if p.rand_pos == 'None':
             rand_pos = None
         else:
-            rand_pos = int(rand_pos)
+            rand_pos = int(p.rand_pos)
         self.stim_provider = HebbRepStimulusProvider(
             n_total_items=9,
             n_items_per_list=9,
