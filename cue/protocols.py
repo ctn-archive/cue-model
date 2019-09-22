@@ -77,7 +77,7 @@ class StimulusProvider(object):
 
     @property
     def epoch_duration(self):
-        return self.proto.pres_phase_duration + self.recall_duration
+        return self.proto.duration + self.recall_duration
 
     @property
     def pres_phase_duration(self):

@@ -41,5 +41,5 @@ def model_out_to_timings(recall_vocab, t, model_out, proto):
     for x in recall_output.T:
         nz = np.nonzero(x)[0]
         if len(nz) > 0:
-            recall_times.append(t[nz[0]] - proto.pres_phase_duration)
+            recall_times.append(t[nz[0]] - proto.duration)
     return recall_times + (proto.n_items - len(recall_times)) * [np.nan]
