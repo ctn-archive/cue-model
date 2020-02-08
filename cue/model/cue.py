@@ -63,6 +63,7 @@ class Control(nengo.Network):
             self._current_stim = '0'
             self.output_no_learn = nengo.Node(
                 lambda t: (self.protocol.is_recall_phase(t) or
+                           (hasattr(self.protocol, 'is_no_learn') and self.protocol.is_no_learn(t)) or
                            self._current_stim is None or
                            self._current_stim.startswith('D')),
                 label='output_no_learn')
