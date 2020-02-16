@@ -26,7 +26,6 @@ class CueTrial(pytry.PlotTrial):
         self.param("noise in recall", noise=0.015)
         self.param("min. recall evidence", min_evidence=0.04)
         self.param("protocol", protocol='immediate')
-        self.param("recall duration", recall_duration=60.)
         self.param("weight decay", decay=1.)
         self.param("extension", extension=None)
         self.param("PyOpenCL context", cl_context=None)
@@ -41,7 +40,7 @@ class CueTrial(pytry.PlotTrial):
 
         self.proto = PROTOCOLS[p.protocol]
         self.stim_provider = RecognitionStimulusProvider(
-            self.proto, p.distractor_rate, p.recall_duration, Random(p.seed))
+            self.proto, p.distractor_rate, Random(p.seed))
         self.vocabs = Vocabularies(
             self.stim_provider, p.item_d, p.context_d, self.proto.n_items + 3,
             np.random.RandomState(p.seed + 1))

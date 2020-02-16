@@ -141,10 +141,9 @@ class RecognitionStimulusProvider(object):
     distractor_rate : float
         Rate of distractors in items per second.
     """
-    def __init__(self, proto, distractor_rate, recall_duration, rng):
+    def __init__(self, proto, distractor_rate, rng):
         self.proto = proto
         self.distractor_rate = distractor_rate
-        self.recall_duration = recall_duration
         self.shuffeled_items = self.get_all_items()
         random.shuffle(self.shuffeled_items, rng)
 
@@ -170,7 +169,7 @@ class RecognitionStimulusProvider(object):
 
     @property
     def epoch_duration(self):
-        return self.proto.duration + self.recall_duration
+        return self.proto.pres_phase_duration * 2 + self.proto.ri
 
     @property
     def pres_phase_duration(self):
@@ -188,7 +187,7 @@ class RecognitionStimulusProvider(object):
         return False
 
     def is_no_learn(self, t):
-        return t >= self.pres_phase_duration + self.ri
+        return t >= self.pres_phase_duration
 
     def make_stimulus_fn(self):
         def stimulus_fn(t):
