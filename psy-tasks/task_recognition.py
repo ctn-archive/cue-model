@@ -6,7 +6,7 @@ from psyrun import Param
 from psyrun.backend import LoadBalancingBackend
 from psyrun.scheduler import Slurm
 
-from cue.trials import CueTrial
+from cue.trials import RecognitionTrial
 
 
 rng = np.random.RandomState(846777)
@@ -59,5 +59,5 @@ elif platform.node().startswith('ctngpu'):
 
 def execute(trial, **kwargs):
     kwargs['protocol'] = 'recognition'
-    result = CueTrial().run(progress=False, **kwargs)
+    result = RecognitionTrial().run(progress=False, **kwargs)
     return result
