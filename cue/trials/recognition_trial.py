@@ -117,16 +117,7 @@ class CueTrial(pytry.PlotTrial):
         with Simulator(self.model(p), **kwargs) as sim:
             sim.run(self.stim_provider.epoch_duration)
 
-        recall_vocab = self.vocabs.items.create_subset(self.stim_provider.get_all_items())
-        responses = model_out_to_responses(
-            recall_vocab, sim.trange(), sim.data[self.p_recalls],
-            sim.data[self.p_pos], self.proto)
-        response_times = model_out_to_timings(
-            recall_vocab, sim.trange(), sim.data[self.p_recalls], self.proto)
-
         result = {
-            'responses': responses,
-            'timings': response_times,
             'positions': np.arange(self.proto.n_items),
             'vocab_vectors': self.vocabs.items.vectors,
             'vocab_keys': list(self.vocabs.items.keys()),
