@@ -141,11 +141,11 @@ class RecognitionStimulusProvider(object):
     distractor_rate : float
         Rate of distractors in items per second.
     """
-    def __init__(self, proto, distractor_rate, rng):
+    def __init__(self, proto, distractor_rate):
         self.proto = proto
         self.distractor_rate = distractor_rate
-        self.shuffeled_items = self.get_all_items()
-        random.shuffle(self.shuffeled_items, rng)
+        self.shuffeled_items = list(range(proto.n_items))
+        random.shuffle(self.shuffeled_items)
 
     @staticmethod
     def get_distractor(epoch, i):
@@ -192,8 +192,8 @@ class RecognitionStimulusProvider(object):
     def make_stimulus_fn(self):
         def stimulus_fn(t):
             recognition = False
-            if t > self.pres_phase_duration + self.ri:
-                t -= self.pres_phase_duration + self.ri
+            if t > self.pres_phase_duration + self.proto.ri:
+                t -= self.pres_phase_duration + self.proto.ri
                 recognition = True
             if t > self.proto.pres_phase_duration:
                 retention_t = t - self.proto.pres_phase_duration
@@ -208,7 +208,7 @@ class RecognitionStimulusProvider(object):
                 epoch_t = t % (self.proto.pi + self.proto.ipi)
                 if epoch_t <= self.proto.pi:
                     if recognition:
-                        stimulus = self.shuffeled_items[epoch]
+                        stimulus = 'V' + str(self.shuffeled_items[min(epoch, len(self.shuffeled_items) - 1)])
                     else:
                         stimulus = self.get_item(epoch)
                 else:

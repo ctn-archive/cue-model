@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from random import Random
+import random
 
 import nengo
 import nengo_spa as spa
@@ -12,7 +12,7 @@ from cue.model import CUE, Vocabularies
 from cue.protocols import PROTOCOLS, RecognitionStimulusProvider
 
 
-class CueTrial(pytry.PlotTrial):
+class RecognitionTrial(pytry.PlotTrial):
     # pylint: disable=attribute-defined-outside-init,arguments-differ
 
     def params(self):
@@ -38,9 +38,10 @@ class CueTrial(pytry.PlotTrial):
         else:
             extenions = {p.extension}
 
+        random.seed(p.seed)
+
         self.proto = PROTOCOLS[p.protocol]
-        self.stim_provider = RecognitionStimulusProvider(
-            self.proto, p.distractor_rate, Random(p.seed))
+        self.stim_provider = RecognitionStimulusProvider(self.proto, p.distractor_rate)
         self.vocabs = Vocabularies(
             self.stim_provider, p.item_d, p.context_d, self.proto.n_items + 3,
             np.random.RandomState(p.seed + 1))
@@ -50,7 +51,6 @@ class CueTrial(pytry.PlotTrial):
                 self.stim_provider, self.vocabs, p.beta, p.gamma,
                 p.ose_thr, p.ordinal_prob, p.noise, p.min_evidence,
                 decay=p.decay, extensions=extensions)
-            self.p_recalls = nengo.Probe(model.cue.output, synapse=0.01)
             self.p_pos = nengo.Probe(model.cue.output_pos, synapse=0.01)
             self.p_ctx = nengo.Probe(
                 model.cue.tcm.current_ctx.current.mem.state_ensembles.ensembles[-1].neurons,
@@ -123,10 +123,10 @@ class CueTrial(pytry.PlotTrial):
             'vocab_keys': list(self.vocabs.items.keys()),
             'pos_vectors': self.vocabs.positions.vectors,
             'pos_keys': list(self.vocabs.positions.keys()),
-            'p_recalls': sim.data[self.p_recalls],
             't': sim.trange(),
             'p_pos': sim.data[self.p_pos],
-            'p_ctx_spikes': sim.data[self.p_ctx]
+            'p_ctx_spikes': sim.data[self.p_ctx],
+            'recognition_order': self.stim_provider.shuffeled_items
         }
         if p.debug:
             result.update(
