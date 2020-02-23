@@ -218,6 +218,7 @@ class CUE(spa.Network):
             inhibit_net(self.ctrl.output_learn, self.irrelevant_pos_gate)
             inhibit_net(
                 self.ctrl.output_recall_phase, self.irrelevant_pos_gate)
+            inhibit_net(self.ctrl.bias, self.irrelevant_pos_gate)
             nengo.Connection(
                 self.irrelevant_pos_gate.output, self.tcm.input_pos)
 
@@ -258,6 +259,7 @@ class CUE(spa.Network):
                 synapse=0.1)
 
             inhibit_net(self.start_of_free_recall, self.pos, strength=10.)
+            inhibit_net(self.ctrl.output_no_learn, self.pos, strength=10.)
 
             nengo.Connection(
                 self.start_of_pres_phase, self.pos.input, transform=tr,
