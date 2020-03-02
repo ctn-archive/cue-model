@@ -181,10 +181,10 @@ class RecognitionStimulusProvider(object):
             self.distractor_rate * max(self.proto.ipi, self.proto.ri)))
 
     def is_pres_phase(self, t):
-        return True
+        return t <= self.proto.pres_phase_duration
 
     def is_recall_phase(self, t):
-        return False
+        return t > self.proto.pres_phase_duration + self.proto.ri
 
     def is_no_learn(self, t):
         return t >= self.pres_phase_duration

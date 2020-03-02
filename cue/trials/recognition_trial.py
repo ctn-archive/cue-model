@@ -25,9 +25,9 @@ class RecognitionTrial(pytry.PlotTrial):
         self.param("TCM prob. to recall from beginning", ordinal_prob=.1)
         self.param("noise in recall", noise=0.015)
         self.param("min. recall evidence", min_evidence=0.04)
-        self.param("protocol", protocol='immediate')
+        self.param("protocol", protocol='recognition')
         self.param("weight decay", decay=1.)
-        self.param("extension", extension=None)
+        self.param("extension", extension='recognition')
         self.param("PyOpenCL context", cl_context=None)
         self.param("debug mode", debug=False)
         self.param("show progress bar", progress=True)
@@ -36,7 +36,7 @@ class RecognitionTrial(pytry.PlotTrial):
         if p.extension is None:
             extensions = set()
         else:
-            extenions = {p.extension}
+            extensions = {p.extension}
 
         random.seed(p.seed)
 
@@ -55,9 +55,21 @@ class RecognitionTrial(pytry.PlotTrial):
             self.p_ctx = nengo.Probe(
                 model.cue.tcm.current_ctx.current.mem.state_ensembles.ensembles[-1].neurons,
                 'spikes', synapse=None)
-            self.p_ctx_v = nengo.Probe(model.cue.tcm.current_ctx.current.mem.output, synapse=0.01)
-            self.p_ret_ctx = nengo.Probe(model.cue.tcm.net_m_ft.output, synapse=0.01)
-            self.p_err = nengo.Probe(model.cue.tcm.net_m_ft.target.output, synapse=0.01)
+            self.p_vhat = nengo.Probe(
+                model.cue.recall.buf.mem.state_ensembles.ensembles[-1].neurons,
+                'spikes', synapse=None)
+            self.p_phat = nengo.Probe(
+                model.cue.pos_recall.buf.mem.state_ensembles.ensembles[-1].neurons,
+                'spikes', synapse=None)
+            self.p_p = nengo.Probe(
+                model.cue.in_pos_gate.state_ensembles.ensembles[-1].neurons,
+                'spikes', synapse=None)
+            self.p_tf_out = nengo.Probe(
+                    model.cue.tcm.net_m_tf.state.state_ensembles.ensembles[-1].neurons[:800],
+                'spikes', synapse=None)
+            self.p_ose = nengo.Probe(
+                    model.cue.ose.mem.mem.state_ensembles.ensembles[-1].neurons,
+                'spikes', synapse=None)
 
             self.debug_probes = {
                 'recall_state': model.cue.recall.state.output,
@@ -130,9 +142,11 @@ class RecognitionTrial(pytry.PlotTrial):
             'p_pos': sim.data[self.p_pos],
             'p_ctx_spikes': sim.data[self.p_ctx],
             'recognition_order': self.stim_provider.shuffeled_items,
-            'p_ret_ctx': sim.data[self.p_ret_ctx],
-            'p_ctx_v': sim.data[self.p_ctx_v],
-            'p_err': sim.data[self.p_err]
+            'p_vhat': sim.data[self.p_vhat],
+            'p_phat': sim.data[self.p_phat],
+            'p_p': sim.data[self.p_p],
+            'p_tf_out': sim.data[self.p_tf_out],
+            'p_ose': sim.data[self.p_ose]
         }
         if p.debug:
             result.update(

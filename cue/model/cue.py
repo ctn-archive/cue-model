@@ -197,7 +197,8 @@ class CUE(spa.Network):
                              transform=self.task_vocabs.positions.vectors.T)
 
             nengo.Connection(self.in_pos_gate.output, self.ose.input_pos)
-            nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
+            if 'recognition' not in extensions:
+                nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
 
             self.irrelevant_pos_gate = spa.State(self.task_vocabs.positions)
             self.irrelevant_pos = nengo.Node(
@@ -219,8 +220,9 @@ class CUE(spa.Network):
             inhibit_net(
                 self.ctrl.output_recall_phase, self.irrelevant_pos_gate)
             inhibit_net(self.ctrl.bias, self.irrelevant_pos_gate)
-            nengo.Connection(
-                self.irrelevant_pos_gate.output, self.tcm.input_pos)
+            if 'recognition' not in extensions:
+                nengo.Connection(
+                    self.irrelevant_pos_gate.output, self.tcm.input_pos)
 
             # Reset of position
             # Happens only in serial recall and a certain fraction of free
@@ -252,23 +254,24 @@ class CUE(spa.Network):
             nengo.Connection(
                 self.start_of_serial_recall, self.pos.input, transform=tr,
                 synapse=0.1)
-            nengo.Connection(
-                self.start_of_serial_recall, self.tcm.input_pos,
-                transform=np.atleast_2d(
-                    self.task_vocabs.positions.vectors[0]).T,
-                synapse=0.1)
+            if 'recognition' not in extensions:
+                nengo.Connection(
+                    self.start_of_serial_recall, self.tcm.input_pos,
+                    transform=np.atleast_2d(
+                        self.task_vocabs.positions.vectors[0]).T,
+                    synapse=0.1)
 
             inhibit_net(self.start_of_free_recall, self.pos, strength=10.)
-            inhibit_net(self.ctrl.output_no_learn, self.pos, strength=10.)
 
             nengo.Connection(
                 self.start_of_pres_phase, self.pos.input, transform=tr,
                 synapse=0.1)
-            nengo.Connection(
-                self.start_of_pres_phase, self.tcm.input_pos,
-                transform=np.atleast_2d(
-                    self.task_vocabs.positions.vectors[0]).T,
-                synapse=0.1)
+            if 'recognition' not in extensions:
+                nengo.Connection(
+                    self.start_of_pres_phase, self.tcm.input_pos,
+                    transform=np.atleast_2d(
+                        self.task_vocabs.positions.vectors[0]).T,
+                    synapse=0.1)
 
             # Certain fraction of recalls use ordinal strategy
             if np.random.rand() >= ordinal_prob:
@@ -360,7 +363,8 @@ class CUE(spa.Network):
                 self.task_vocabs.items.create_subset(protocol.get_all_items()),
                 noise=recall_noise, min_evidence=min_evidence, n_inputs=2)
             self.recalled_gate = spa.State(self.task_vocabs.items)
-            nengo.Connection(self.recalled_gate.output, self.tcm.input)
+            if 'recognition' not in extensions:
+                nengo.Connection(self.recalled_gate.output, self.tcm.input)
 
             self.pos_recall = NeuralAccumulatorDecisionProcess(
                 self.task_vocabs.positions, noise=recall_noise,
