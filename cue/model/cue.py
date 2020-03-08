@@ -197,8 +197,9 @@ class CUE(spa.Network):
                              transform=self.task_vocabs.positions.vectors.T)
 
             nengo.Connection(self.in_pos_gate.output, self.ose.input_pos)
-            nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
-            inhibit_net(self.ctrl.output_no_learn, self.in_pos_gate, strength=10.)
+            if 'no_pos_input' not in extensions:
+                nengo.Connection(self.in_pos_gate.output, self.tcm.input_pos)
+                inhibit_net(self.ctrl.output_no_learn, self.in_pos_gate, strength=10.)
 
             self.irrelevant_pos_gate = spa.State(self.task_vocabs.positions)
             self.irrelevant_pos = nengo.Node(
@@ -220,8 +221,9 @@ class CUE(spa.Network):
             inhibit_net(
                 self.ctrl.output_recall_phase, self.irrelevant_pos_gate)
             inhibit_net(self.ctrl.bias, self.irrelevant_pos_gate)
-            nengo.Connection(self.irrelevant_pos_gate.output, self.tcm.input_pos)
-            inhibit_net(self.ctrl.output_no_learn, self.irrelevant_pos_gate, strength=10.)
+            if 'no_pos_input' not in extensions:
+                nengo.Connection(self.irrelevant_pos_gate.output, self.tcm.input_pos)
+                inhibit_net(self.ctrl.output_no_learn, self.irrelevant_pos_gate, strength=10.)
 
             # Reset of position
             # Happens only in serial recall and a certain fraction of free
